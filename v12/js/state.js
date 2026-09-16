@@ -55,7 +55,7 @@ function normalizeWeekly(t){
       difficultyId:t.difficultyId,
       gates:Array.from({length:gates},(_,i)=>({done:Array.isArray(t.gates)?!!t.gates[i]?.done:oldDone})),
       goldEnabled:t.goldEnabled!==false,
-      goldOverride:Number.isFinite(Number(t.goldOverride))?Number(t.goldOverride):null,
+      goldOverride:t.goldOverride===null||t.goldOverride===undefined||t.goldOverride===''?null:(Number.isFinite(Number(t.goldOverride))?Number(t.goldOverride):null),
       note:String(t.note||''),
       active:t.active!==false,
       source:String(t.source||'manual')
