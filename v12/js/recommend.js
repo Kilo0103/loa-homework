@@ -1,0 +1,4 @@
+import { RAID_CATALOG } from '../data/raids.js';
+import { makeDaily, makeRaidWeekly } from './state.js';
+export function recommendedDaily(c){const ilvl=Number(c.itemAvgLevel||0);if(ilvl>=1640)return [makeDaily('쿠르잔 전선',1,true),makeDaily('가디언 토벌',1,true),makeDaily('에포나 의뢰',3,false)];return [makeDaily('카오스 던전',2,true),makeDaily('가디언 토벌',1,true),makeDaily('에포나 의뢰',3,false)];}
+export function recommendedRaids(c,count=3){const ilvl=Number(c.itemAvgLevel||0);const candidates=[];for(const raid of RAID_CATALOG){if(raid.legacy)continue;const eligible=raid.difficulties.filter(d=>d.ilvl<=ilvl);if(!eligible.length)continue;eligible.sort((a,b)=>b.ilvl-a.ilvl||b.gold-a.gold);const d=eligible[0];candidates.push({raid,d});}candidates.sort((a,b)=>b.d.gold-a.d.gold||b.d.ilvl-a.d.ilvl);return candidates.slice(0,Math.max(1,Number(count||3))).map(x=>makeRaidWeekly(x.raid.id,x.d.id));}
