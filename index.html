@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0b0d12">
+<title>LOA Homework V8</title>
+<style>
+:root{
+  --bg:#0b0d12;
+  --surface:#11151d;
+  --surface-2:#151a23;
+  --surface-3:#1a202b;
+  --hover:#1d2430;
+  --line:#282f3c;
+  --line-strong:#394355;
+  --text:#f1f3f7;
+  --text-2:#c4cad4;
+  --muted:#838d9e;
+  --gold:#d9b35f;
+  --gold-soft:#f0d394;
+  --green:#55c993;
+  --blue:#6fa5f7;
+  --purple:#9b88f6;
+  --red:#ed7481;
+  --shadow:0 18px 60px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 7% -10%,rgba(155,136,246,.09),transparent 28%),
+    radial-gradient(circle at 94% 0,rgba(217,179,95,.06),transparent 22%),
+    var(--bg);
+  color:var(--text);
+  font-family:Pretendard,"Noto Sans KR",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{width:min(1500px,calc(100% - 28px));margin:0 auto;padding:18px 0 54px}
+.topbar{height:58px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:1000;font-size:12px;color:#251d0c;background:linear-gradient(145deg,#f0cf80,#b98c31);box-shadow:0 7px 22px rgba(217,179,95,.13);flex:0 0 auto}
+.brand-title{font-size:16px;font-weight:950;letter-spacing:-.035em}
+.brand-sub{font-size:9px;color:var(--muted);margin-top:2px}
+.top-actions{display:flex;gap:6px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface-2);color:var(--text-2);border-radius:9px;padding:8px 10px;font-size:10px;font-weight:850;transition:.14s}
+.btn:hover{background:var(--hover);border-color:var(--line-strong);color:var(--text)}
+.btn.primary{color:#171208;border-color:#caa44f;background:linear-gradient(135deg,#e2bd68,#c89a3d)}
+.btn.danger{color:#ffbcc4}
+.btn.icon{width:34px;height:34px;padding:0;display:grid;place-items:center;font-size:14px}
+.btn.small{font-size:9px;padding:6px 8px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.summary{display:grid;grid-template-columns:1.35fr repeat(3,.72fr);gap:8px;margin-bottom:10px}
+.stat{border:1px solid var(--line);background:rgba(17,21,29,.94);border-radius:12px;padding:11px 12px;min-height:76px}
+.stat.main{display:grid;grid-template-columns:auto 1fr;gap:15px;align-items:center}
+.stat-label{font-size:8px;color:var(--muted);font-weight:850;letter-spacing:.05em}
+.stat-value{font-size:21px;line-height:1;font-weight:1000;letter-spacing:-.045em;margin-top:7px}
+.stat-value small{font-size:8px;color:var(--muted);margin-left:3px}
+.stat-note{font-size:8px;color:var(--muted);margin-top:5px}
+.progress-wrap{min-width:170px}
+.progress{height:6px;border-radius:999px;background:#222836;overflow:hidden}
+.progress>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--purple),var(--gold));transition:.2s}
+.progress-caption{display:flex;justify-content:space-between;color:var(--muted);font-size:8px;margin-top:6px}
+.board{border:1px solid var(--line);background:rgba(16,20,27,.95);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.board-toolbar{min-height:50px;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--line);background:#121720}
+.filters{display:flex;gap:4px;align-items:center}
+.filter{border:0;background:transparent;color:var(--muted);border-radius:8px;padding:7px 9px;font-size:9px;font-weight:900}
+.filter:hover{background:var(--surface-3);color:var(--text-2)}
+.filter.active{background:#242b38;color:var(--text)}
+.searchbox{width:min(270px,38vw);position:relative}
+.searchbox input{width:100%;border:1px solid var(--line);background:#0e1218;color:var(--text);outline:none;padding:8px 9px 8px 28px;border-radius:9px;font-size:9px}
+.searchbox input:focus{border-color:#545e70}
+.searchbox::before{content:"⌕";position:absolute;left:9px;top:50%;transform:translateY(-52%);color:var(--muted);font-size:13px}
+.list-header,.character-row{display:grid;grid-template-columns:minmax(220px,280px) 105px minmax(0,1fr) 44px;align-items:center}
+.list-header{min-height:31px;color:#697486;font-size:8px;font-weight:850;letter-spacing:.05em;border-bottom:1px solid var(--line);background:#0f131a}
+.list-header>div,.character-row>div{padding:0 12px}
+.character-row{min-height:88px;border-bottom:1px solid var(--line);transition:.12s}
+.character-row:last-child{border-bottom:0}
+.character-row:hover{background:rgba(255,255,255,.012)}
+.identity{display:flex;align-items:center;gap:10px;min-width:0}
+.avatar{width:46px;height:46px;border-radius:12px;overflow:hidden;flex:0 0 auto;border:1px solid #303847;background:#0d1117}
+.avatar img{width:100%;height:100%;object-fit:cover;object-position:50% 18%}
+.avatar-fallback{width:100%;height:100%;display:grid;place-items:center;font-size:10px;font-weight:950;color:#697487}
+.identity-text{min-width:0;flex:1}
+.name-line{display:flex;align-items:center;gap:5px;min-width:0}
+.char-name{font-size:11px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.favorite{border:0;background:transparent;padding:0;color:#434b59;font-size:14px;line-height:1}
+.favorite.on{color:var(--gold)}
+.char-meta{margin-top:4px;display:flex;gap:5px;align-items:center;color:var(--muted);font-size:8px;white-space:nowrap}
+.level{color:var(--gold-soft);font-weight:850}
+.row-progress{text-align:center}
+.row-progress strong{font-size:12px}
+.mini-progress{width:64px;height:4px;margin:6px auto 0;background:#252b38;border-radius:999px;overflow:hidden}
+.mini-progress span{display:block;height:100%;background:var(--green);border-radius:inherit}
+.tasks{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding-top:10px!important;padding-bottom:10px!important}
+.task-chip{border:1px solid #303949;background:#171d26;color:#c1c8d3;border-radius:8px;min-height:31px;padding:5px 8px 5px 6px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:850;transition:.12s}
+.task-chip:hover{border-color:#475367;background:#1d2430}
+.task-chip.done{opacity:.45;background:#12171e}
+.task-chip.done .task-text{text-decoration:line-through}
+.check-dot{width:17px;height:17px;border-radius:5px;border:1px solid #465167;background:#0e1218;display:grid;place-items:center;flex:0 0 auto;font-size:9px}
+.task-chip.done .check-dot{background:#406b54;border-color:#57876a;color:#dff5e8}
+.cat-dot{width:5px;height:5px;border-radius:50%;background:#7d8798;display:inline-block}
+.cat-레이드 .cat-dot{background:var(--red)}
+.cat-낙원 .cat-dot{background:var(--purple)}
+.cat-주간 .cat-dot{background:var(--blue)}
+.cat-기타 .cat-dot{background:var(--gold)}
+.row-menu{display:grid;place-items:center}
+.menu-btn{width:30px;height:30px;border:0;background:transparent;color:#707b8d;border-radius:8px;font-size:16px}
+.menu-btn:hover{background:#1d2430;color:var(--text)}
+.empty-tasks{color:#687386;font-size:9px;border:1px dashed #303949;border-radius:8px;padding:8px 10px}
+.empty-state{padding:58px 20px;text-align:center;color:var(--muted);font-size:10px}
+.empty-state strong{display:block;color:var(--text-2);font-size:12px;margin-bottom:6px}
+.empty-state .btn{margin-top:14px}
+.reset-line{display:flex;justify-content:space-between;align-items:center;margin:8px 2px 0;color:#657083;font-size:8px}
+.modal-bg{position:fixed;inset:0;z-index:90;display:none;place-items:center;padding:14px;background:rgba(0,0,0,.72);backdrop-filter:blur(7px)}
+.modal-bg.open{display:grid}
+.modal{width:min(700px,100%);max-height:90vh;overflow:auto;border:1px solid #3b4558;background:#12161e;border-radius:16px;box-shadow:0 32px 100px rgba(0,0,0,.58)}
+.modal-head{min-height:50px;padding:0 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2;background:#12161e}
+.modal-head h2{margin:0;font-size:13px}
+.close{width:30px;height:30px;border:0;background:transparent;color:var(--muted);border-radius:8px}
+.close:hover{background:var(--surface-3);color:var(--text)}
+.modal-body{padding:14px}
+.modal-foot{min-height:58px;padding:10px 14px;display:flex;justify-content:flex-end;align-items:center;gap:6px;border-top:1px solid var(--line)}
+.section-title{margin:4px 0 9px;font-size:9px;font-weight:900;color:#d4d9e1}
+.section-desc{color:var(--muted);font-size:8px;line-height:1.55;margin-top:-4px;margin-bottom:10px}
+.field{display:grid;gap:5px;margin-bottom:11px}
+.field label{font-size:8px;color:#aeb7c6;font-weight:850}
+.input,.select{width:100%;border:1px solid #343e50;background:#0d1117;color:var(--text);border-radius:9px;padding:9px 10px;outline:none;font-size:9px}
+.input:focus,.select:focus{border-color:#5c6679}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.setting-block{padding:11px;border:1px solid var(--line);background:#151a23;border-radius:10px;margin-bottom:8px}
+.setting-block:last-child{margin-bottom:0}
+.setting-name{font-size:9px;font-weight:900}
+.setting-desc{font-size:8px;color:var(--muted);line-height:1.5;margin-top:4px}
+.switch-line{display:flex;align-items:center;gap:7px;font-size:9px;color:var(--text-2)}
+.inline-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.candidate-top{display:flex;gap:7px;margin-bottom:10px}
+.candidate-top .input{flex:1}
+.candidate-list{display:grid;gap:5px}
+.candidate{min-height:55px;display:grid;grid-template-columns:22px 38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);background:#151a23;border-radius:10px;padding:7px 9px}
+.candidate:hover{border-color:#414c60}
+.candidate.disabled{opacity:.46}
+.candidate-avatar{width:38px;height:38px;border-radius:9px;overflow:hidden;background:#0d1117;border:1px solid #303848}
+.candidate-avatar img{width:100%;height:100%;object-fit:cover;object-position:50% 18%}
+.candidate-name{font-size:9px;font-weight:900}
+.candidate-meta{font-size:8px;color:var(--muted);margin-top:3px}
+.badge{border:1px solid #343e50;background:#1b212c;color:#9ba6b7;border-radius:999px;padding:4px 6px;font-size:7px;font-weight:850}
+.character-mini{display:flex;align-items:center;gap:9px;padding:9px;border:1px solid var(--line);border-radius:10px;background:#151a23;margin-bottom:12px}
+.character-mini .avatar{width:38px;height:38px;border-radius:9px}
+.character-mini-name{font-size:10px;font-weight:900}
+.character-mini-meta{font-size:8px;color:var(--muted);margin-top:3px}
+.copy-bar{display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:11px}
+.editor{display:grid;gap:6px}
+.edit-row{border:1px solid var(--line);background:#151a23;border-radius:10px;padding:8px;display:grid;grid-template-columns:1fr 105px 29px;gap:6px;align-items:start}
+.edit-main{display:grid;gap:5px}
+.remove{width:29px;height:29px;border:0;border-radius:7px;background:#1d232e;color:#7d8798}
+.remove:hover{background:#2a2026;color:#ffabb5}
+.quick-add{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.sync-message{border:1px solid rgba(85,201,147,.24);background:rgba(85,201,147,.05);color:#a9e8c8;border-radius:9px;padding:8px 9px;font-size:8px;line-height:1.5;margin-top:8px}
+.sync-message.error{border-color:rgba(237,116,129,.28);background:rgba(237,116,129,.05);color:#ffbdc4}
+.toast{position:fixed;right:15px;bottom:15px;z-index:130;border:1px solid #3a4455;background:#202632;color:#fff;border-radius:9px;padding:9px 11px;font-size:9px;font-weight:850;opacity:0;transform:translateY(7px);pointer-events:none;transition:.16s}
+.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:1000px){.summary{grid-template-columns:1fr 1fr}.stat.main{grid-column:1/-1}.list-header,.character-row{grid-template-columns:220px 90px minmax(320px,1fr) 40px}.board{overflow-x:auto}.board-inner{min-width:760px}}
+@media(max-width:680px){.app{width:calc(100% - 16px);padding-top:10px}.topbar{height:auto;align-items:flex-start}.brand-sub{display:none}.top-actions .btn:not(.icon):not(.primary){display:none}.summary{grid-template-columns:1fr 1fr}.stat.main{grid-template-columns:1fr}.progress-wrap{min-width:0}.board-toolbar{align-items:stretch;flex-direction:column}.filters{overflow:auto}.searchbox{width:100%}.two{grid-template-columns:1fr}.edit-row{grid-template-columns:1fr 29px}.edit-row .select{grid-column:1/2}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="brand"><div class="logo">LA</div><div><div class="brand-title">내 숙제</div><div class="brand-sub">원정대 주간 콘텐츠를 한 화면에서 관리합니다.</div></div></div>
+  <div class="top-actions"><button class="btn" id="syncTopBtn" title="API 원정대 동기화">↻ 동기화</button><button class="btn primary" id="addCharacterBtn">+ 캐릭터</button><button class="btn icon" id="settingsBtn" title="설정">⚙</button></div>
+</header>
+<section class="summary">
+  <article class="stat main"><div><div class="stat-label">이번 주 진행률</div><div class="stat-value" id="summaryPercent">0%</div></div><div class="progress-wrap"><div class="progress"><span id="summaryBar" style="width:0%"></span></div><div class="progress-caption"><span id="summaryCount">0 / 0 완료</span><span id="summaryRemaining">남은 숙제 0</span></div></div></article>
+  <article class="stat"><div class="stat-label">숙제 캐릭터</div><div class="stat-value" id="summaryCharacters">0<small>명</small></div><div class="stat-note">직접 등록한 캐릭터</div></article>
+  <article class="stat"><div class="stat-label">미완료</div><div class="stat-value" id="summaryUnfinished">0<small>개</small></div><div class="stat-note">이번 주 남은 콘텐츠</div></article>
+  <article class="stat"><div class="stat-label">API 원정대</div><div class="stat-value" id="summaryRoster">0<small>명</small></div><div class="stat-note" id="summarySync">동기화 전</div></article>
+</section>
+<section class="board"><div class="board-toolbar"><div class="filters"><button class="filter active" data-filter="all">전체</button><button class="filter" data-filter="remaining">미완료</button><button class="filter" data-filter="completed">완료</button><button class="filter" data-filter="favorite">즐겨찾기</button></div><div class="searchbox"><input id="characterSearch" autocomplete="off" placeholder="캐릭터 검색"></div></div><div class="board-inner"><div class="list-header"><div>캐릭터</div><div style="text-align:center">진행</div><div>이번 주 숙제</div><div></div></div><div id="characterList"></div></div></section>
+<div class="reset-line"><span>주간 체크는 수요일 06:00 KST에 자동 초기화됩니다.</span><span id="lastSyncText">API 동기화 기록 없음</span></div>
+</div>
+<div class="modal-bg" id="settingsModal"><div class="modal"><div class="modal-head"><h2>설정</h2><button class="close" data-close="settingsModal">✕</button></div><div class="modal-body"><div class="section-title">API 연동</div><div class="section-desc">API는 캐릭터 프로필 정보만 갱신합니다. 사용자가 만든 주간 숙제와 체크 상태는 수정하지 않습니다.</div><div class="two"><div class="field"><label>원정대 조회 캐릭터</label><input class="input" id="settingsCharacterName" placeholder="원정대 내 아무 캐릭터"></div><div class="field"><label>API Key</label><input class="input" id="settingsApiKey" type="password" placeholder="API Key"></div></div><div class="setting-block"><label class="switch-line"><input type="checkbox" id="rememberApiKey"> 이 브라우저에 API Key 저장</label><div class="setting-desc">공유 PC에서는 저장하지 않는 것을 권장합니다.</div><div class="inline-actions"><button class="btn primary small" id="syncSettingsBtn">지금 동기화</button></div><div id="syncMessage"></div></div><div class="section-title" style="margin-top:16px">데이터</div><div class="setting-block"><div class="setting-name">주간 체크</div><div class="setting-desc">숙제 구성은 유지하고 모든 완료 체크만 해제합니다.</div><div class="inline-actions"><button class="btn small" id="resetWeeklyBtn">주간 체크 초기화</button></div></div><div class="setting-block"><div class="setting-name">백업 및 초기화</div><div class="setting-desc">현재 캐릭터·숙제 구성을 JSON으로 저장하거나 전체 데이터를 지울 수 있습니다.</div><div class="inline-actions"><button class="btn small" id="exportBtn">백업 내보내기</button><button class="btn danger small" id="resetAllBtn">전체 초기화</button></div></div></div><div class="modal-foot"><button class="btn primary" id="saveSettingsBtn">저장</button></div></div></div>
+<div class="modal-bg" id="addModal"><div class="modal"><div class="modal-head"><h2>캐릭터 추가</h2><button class="close" data-close="addModal">✕</button></div><div class="modal-body"><div class="candidate-top"><input class="input" id="candidateSearch" placeholder="캐릭터명 · 클래스 · 서버 검색"><button class="btn small" id="selectAvailableBtn">추가 가능 전체</button></div><div class="section-desc">API 원정대에서 숙제판에 사용할 캐릭터만 선택합니다. 캐릭터는 언제든 다시 추가하거나 제거할 수 있습니다.</div><div class="candidate-list" id="candidateList"></div></div><div class="modal-foot"><span id="selectedCount" style="margin-right:auto;color:var(--muted);font-size:8px">0명 선택</span><button class="btn primary" id="confirmAddBtn">선택 추가</button></div></div></div>
+<div class="modal-bg" id="weeklyModal"><div class="modal"><div class="modal-head"><h2>주간 숙제</h2><button class="close" data-close="weeklyModal">✕</button></div><div class="modal-body"><input id="weeklyCharacterKey" type="hidden"><div class="character-mini" id="weeklyCharacterSummary"></div><div class="copy-bar"><select class="select" id="copySource"><option value="">다른 캐릭터 숙제 구성 복사</option></select><button class="btn small" id="copyTasksBtn">복사</button></div><div class="section-title">숙제 구성</div><div class="editor" id="weeklyEditor"></div><div class="quick-add"><button class="btn small" data-quick="레이드">+ 레이드</button><button class="btn small" data-quick="낙원">+ 낙원</button><button class="btn small" data-quick="주간">+ 주간</button><button class="btn small" data-quick="기타">+ 기타</button></div></div><div class="modal-foot"><button class="btn danger" id="removeCharacterBtn" style="margin-right:auto">숙제판에서 제거</button><button class="btn primary" id="saveWeeklyBtn">저장</button></div></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const API_BASE = "https://developer-lostark.game.onstove.com";
+const STORAGE_KEY = "loa-homework-v8";
+const OLD_STORAGE_KEY = "loa-homework-v7";
+const API_KEY_STORAGE = "loa-homework-v8:api-key";
+const OLD_API_KEY_STORAGE = "loa-homework-v7:api-key";
+let filterMode = "all";
+let searchText = "";
+function uid(prefix){return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;}
+function currentWeeklyCycle(){const formatter=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",hourCycle:"h23"});const parts=Object.fromEntries(formatter.formatToParts(new Date()).filter((part)=>part.type!=="literal").map((part)=>[part.type,part.value]));let year=Number(parts.year);let month=Number(parts.month);let day=Number(parts.day);const hour=Number(parts.hour);const effective=new Date(Date.UTC(year,month-1,day,12));if(hour<6){effective.setUTCDate(effective.getUTCDate()-1);}const dayOfWeek=effective.getUTCDay();const daysSinceWednesday=(dayOfWeek-3+7)%7;effective.setUTCDate(effective.getUTCDate()-daysSinceWednesday);return [effective.getUTCFullYear(),String(effective.getUTCMonth()+1).padStart(2,"0"),String(effective.getUTCDate()).padStart(2,"0")].join("-");}
+function createState(){return {meta:{weeklyCycle:currentWeeklyCycle()},settings:{characterName:"",rememberApiKey:false},apiRoster:{fetchedAt:null,characters:[]},activeCharacters:[]};}
+function migrateState(parsed){const base=createState();return {meta:{weeklyCycle:parsed?.meta?.weeklyCycle??currentWeeklyCycle()},settings:{...base.settings,...(parsed?.settings??{})},apiRoster:{...base.apiRoster,...(parsed?.apiRoster??{})},activeCharacters:Array.isArray(parsed?.activeCharacters)?parsed.activeCharacters.map((character)=>({...character,weeklyTasks:Array.isArray(character.weeklyTasks)?character.weeklyTasks:[]})):[]};}
+function loadState(){try{const current=localStorage.getItem(STORAGE_KEY);if(current){return migrateState(JSON.parse(current));}const old=localStorage.getItem(OLD_STORAGE_KEY);if(old){const migrated=migrateState(JSON.parse(old));localStorage.setItem(STORAGE_KEY,JSON.stringify(migrated));return migrated;}}catch{}return createState();}
+let state=loadState();
+function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+function applyAutomaticWeeklyReset(){const cycle=currentWeeklyCycle();if(state.meta.weeklyCycle===cycle){return;}state.activeCharacters.forEach((character)=>{character.weeklyTasks.forEach((task)=>{task.done=false;});});state.meta.weeklyCycle=cycle;saveState();}
+function escapeHtml(value){return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");}
+function normalizeApiKey(value){const trimmed=String(value??"").trim();return trimmed.toLowerCase().startsWith("bearer ")?trimmed.slice(7).trim():trimmed;}
+function parseItemLevel(value){const parsed=Number.parseFloat(String(value??"0").replaceAll(",",""));return Number.isFinite(parsed)?parsed:0;}
+function stableKey(character){return `${character.serverName}::${character.characterName}`;}
+function normalizeSibling(raw){return {serverName:raw?.ServerName??"",characterName:raw?.CharacterName??"",characterLevel:Number(raw?.CharacterLevel??0),characterClassName:raw?.CharacterClassName??"",itemAvgLevelText:raw?.ItemAvgLevel??"0",itemAvgLevel:parseItemLevel(raw?.ItemAvgLevel)};}
+function normalizeProfile(raw){if(!raw||typeof raw!=="object"){return null;}return {characterImage:raw.CharacterImage??null,expeditionLevel:Number(raw.ExpeditionLevel??0),guildName:raw.GuildName??null,combatPower:raw.CombatPower??null,townName:raw.TownName??null,title:raw.Title??null};}
+async function apiGet(endpoint,apiKey){const response=await fetch(`${API_BASE}${endpoint}`,{method:"GET",headers:{accept:"application/json",authorization:`bearer ${apiKey}`}});if(!response.ok){const error=new Error(`HTTP ${response.status}`);error.status=response.status;throw error;}return response.json();}
+async function mapConcurrency(items,concurrency,mapper){const output=new Array(items.length);let cursor=0;async function worker(){while(true){const index=cursor;cursor+=1;if(index>=items.length){return;}output[index]=await mapper(items[index],index);}}const workers=[];const count=Math.min(Math.max(1,concurrency),Math.max(1,items.length));for(let index=0;index<count;index+=1){workers.push(worker());}await Promise.all(workers);return output;}
+async function synchronizeRoster(){const characterName=document.getElementById("settingsCharacterName").value.trim();const apiKey=normalizeApiKey(document.getElementById("settingsApiKey").value);if(!characterName){toast("원정대 조회 캐릭터를 입력해 주세요.");return false;}if(!apiKey){toast("API Key를 입력해 주세요.");return false;}const button=document.getElementById("syncSettingsBtn");const message=document.getElementById("syncMessage");button.disabled=true;button.textContent="동기화 중";message.className="sync-message";message.textContent="원정대 캐릭터 목록을 조회하고 있습니다.";try{const siblingRaw=await apiGet(`/characters/${encodeURIComponent(characterName)}/siblings`,apiKey);if(!Array.isArray(siblingRaw)){throw new Error("원정대 응답 형식 오류");}const siblings=siblingRaw.map(normalizeSibling).filter((character)=>character.characterName);let completed=0;const characters=await mapConcurrency(siblings,4,async(character)=>{let profile=null;try{const rawProfile=await apiGet(`/armories/characters/${encodeURIComponent(character.characterName)}/profiles`,apiKey);profile=normalizeProfile(rawProfile);}catch{profile=null;}completed+=1;message.textContent=`캐릭터 프로필 조회 ${completed}/${siblings.length}`;return {...character,profile};});characters.sort((left,right)=>{if(left.serverName!==right.serverName){return left.serverName.localeCompare(right.serverName,"ko");}return right.itemAvgLevel-left.itemAvgLevel;});state.settings.characterName=characterName;state.settings.rememberApiKey=document.getElementById("rememberApiKey").checked;state.apiRoster={fetchedAt:new Date().toISOString(),characters};mergeActiveProfiles();if(state.settings.rememberApiKey){localStorage.setItem(API_KEY_STORAGE,apiKey);}else{localStorage.removeItem(API_KEY_STORAGE);localStorage.removeItem(OLD_API_KEY_STORAGE);}saveState();render();message.textContent=`${characters.length}개 캐릭터를 동기화했습니다. 숙제 구성은 그대로 유지했습니다.`;toast("원정대 정보를 갱신했습니다.");return true;}catch(error){message.className="sync-message error";if(error.status===401||error.status===403){message.textContent="API Key를 확인해 주세요.";}else if(error.status===429){message.textContent="API 요청 제한에 도달했습니다. 잠시 후 다시 시도해 주세요.";}else if(error instanceof TypeError){message.textContent="브라우저 또는 네트워크에서 API 요청을 차단했습니다.";}else{message.textContent=`동기화 실패: ${error.message}`;}return false;}finally{button.disabled=false;button.textContent="지금 동기화";}}
+function mergeActiveProfiles(){const rosterMap=new Map(state.apiRoster.characters.map((character)=>[stableKey(character),character]));state.activeCharacters.forEach((active)=>{const latest=rosterMap.get(active.key);if(!latest){return;}active.serverName=latest.serverName;active.characterName=latest.characterName;active.characterLevel=latest.characterLevel;active.characterClassName=latest.characterClassName;active.itemAvgLevel=latest.itemAvgLevel;active.itemAvgLevelText=latest.itemAvgLevelText;active.profile=latest.profile;});}
+function characterStats(character){const total=character.weeklyTasks.length;const done=character.weeklyTasks.filter((task)=>task.done).length;return {total,done,remaining:total-done,percent:total>0?Math.round(done/total*100):0};}
+function render(){applyAutomaticWeeklyReset();renderSummary();renderCharacters();renderSyncText();}
+function renderSummary(){const totalTasks=state.activeCharacters.reduce((sum,character)=>sum+character.weeklyTasks.length,0);const doneTasks=state.activeCharacters.reduce((sum,character)=>sum+character.weeklyTasks.filter((task)=>task.done).length,0);const remaining=totalTasks-doneTasks;const percent=totalTasks>0?Math.round(doneTasks/totalTasks*100):0;document.getElementById("summaryPercent").textContent=`${percent}%`;document.getElementById("summaryBar").style.width=`${percent}%`;document.getElementById("summaryCount").textContent=`${doneTasks} / ${totalTasks} 완료`;document.getElementById("summaryRemaining").textContent=`남은 숙제 ${remaining}`;document.getElementById("summaryCharacters").innerHTML=`${state.activeCharacters.length}<small>명</small>`;document.getElementById("summaryUnfinished").innerHTML=`${remaining}<small>개</small>`;document.getElementById("summaryRoster").innerHTML=`${state.apiRoster.characters.length}<small>명</small>`;document.getElementById("summarySync").textContent=state.apiRoster.fetchedAt?new Date(state.apiRoster.fetchedAt).toLocaleDateString("ko-KR"):"동기화 전";}
+function filteredCharacters(){const query=searchText.trim().toLowerCase();return [...state.activeCharacters].sort((left,right)=>{if(left.favorite!==right.favorite){return left.favorite?-1:1;}return right.itemAvgLevel-left.itemAvgLevel;}).filter((character)=>{const stats=characterStats(character);if(filterMode==="remaining"&&stats.remaining===0){return false;}if(filterMode==="completed"&&(stats.total===0||stats.remaining!==0)){return false;}if(filterMode==="favorite"&&!character.favorite){return false;}if(!query){return true;}const haystack=[character.characterName,character.characterClassName,character.serverName,character.itemAvgLevelText].join(" ").toLowerCase();return haystack.includes(query);});}
+function renderCharacters(){const container=document.getElementById("characterList");const characters=filteredCharacters();if(state.activeCharacters.length===0){container.innerHTML=`<div class="empty-state"><strong>숙제 캐릭터가 없습니다.</strong>API 원정대에서 실제로 관리할 캐릭터만 추가해 주세요.<br><button class="btn primary" onclick="openAddModal()">+ 캐릭터 추가</button></div>`;return;}if(characters.length===0){container.innerHTML=`<div class="empty-state"><strong>조건에 맞는 캐릭터가 없습니다.</strong>필터나 검색어를 변경해 주세요.</div>`;return;}container.innerHTML=characters.map(characterRowHtml).join("");}
+function characterRowHtml(character){const stats=characterStats(character);const image=character.profile?.characterImage;return `<div class="character-row"><div class="identity"><div class="avatar">${image?`<img src="${escapeHtml(image)}" alt="${escapeHtml(character.characterName)}">`:`<div class="avatar-fallback">${escapeHtml(character.characterClassName.slice(0,2)||"LA")}</div>`}</div><div class="identity-text"><div class="name-line"><button class="favorite ${character.favorite?"on":""}" onclick="toggleFavorite('${escapeHtml(character.key)}')" title="즐겨찾기">★</button><span class="char-name">${escapeHtml(character.characterName)}</span></div><div class="char-meta"><span>${escapeHtml(character.characterClassName)}</span><span>·</span><span class="level">Lv.${escapeHtml(character.itemAvgLevelText)}</span><span>·</span><span>${escapeHtml(character.serverName)}</span></div></div></div><div class="row-progress"><strong>${stats.percent}%</strong><div class="mini-progress"><span style="width:${stats.percent}%"></span></div></div><div class="tasks">${character.weeklyTasks.length===0?`<button class="empty-tasks" onclick="openWeeklyModal('${escapeHtml(character.key)}')">+ 이번 주 숙제 구성</button>`:character.weeklyTasks.map((task)=>`<button class="task-chip cat-${escapeHtml(task.category||"주간")} ${task.done?"done":""}" onclick="toggleTask('${escapeHtml(character.key)}','${escapeHtml(task.id)}')" title="${escapeHtml(task.note||task.name)}"><span class="check-dot">${task.done?"✓":""}</span><span class="cat-dot"></span><span class="task-text">${escapeHtml(task.name)}</span></button>`).join("")}</div><div class="row-menu"><button class="menu-btn" onclick="openWeeklyModal('${escapeHtml(character.key)}')" title="숙제 설정">⋯</button></div></div>`;}
+function toggleTask(characterKey,taskId){const character=state.activeCharacters.find((item)=>item.key===characterKey);const task=character?.weeklyTasks.find((item)=>item.id===taskId);if(!task){return;}task.done=!task.done;saveState();render();}
+function toggleFavorite(characterKey){const character=state.activeCharacters.find((item)=>item.key===characterKey);if(!character){return;}character.favorite=!character.favorite;saveState();render();}
+function openSettings(){document.getElementById("settingsCharacterName").value=state.settings.characterName||"";document.getElementById("rememberApiKey").checked=Boolean(state.settings.rememberApiKey);document.getElementById("settingsApiKey").value=localStorage.getItem(API_KEY_STORAGE)||localStorage.getItem(OLD_API_KEY_STORAGE)||"";document.getElementById("syncMessage").innerHTML="";openModal("settingsModal");}
+function saveSettings(){state.settings.characterName=document.getElementById("settingsCharacterName").value.trim();state.settings.rememberApiKey=document.getElementById("rememberApiKey").checked;const apiKey=normalizeApiKey(document.getElementById("settingsApiKey").value);if(state.settings.rememberApiKey&&apiKey){localStorage.setItem(API_KEY_STORAGE,apiKey);}else{localStorage.removeItem(API_KEY_STORAGE);localStorage.removeItem(OLD_API_KEY_STORAGE);}saveState();closeModal("settingsModal");toast("설정을 저장했습니다.");}
+function openAddModal(){if(state.apiRoster.characters.length===0){toast("먼저 설정에서 API 원정대를 동기화해 주세요.");openSettings();return;}document.getElementById("candidateSearch").value="";renderCandidates();updateCandidateSelectionCount();openModal("addModal");}
+function renderCandidates(){const query=document.getElementById("candidateSearch").value.trim().toLowerCase();const activeKeys=new Set(state.activeCharacters.map((character)=>character.key));const candidates=state.apiRoster.characters.filter((character)=>{if(!query){return true;}return [character.characterName,character.characterClassName,character.serverName,character.itemAvgLevelText].join(" ").toLowerCase().includes(query);});const list=document.getElementById("candidateList");if(candidates.length===0){list.innerHTML=`<div class="empty-state">검색 결과가 없습니다.</div>`;return;}list.innerHTML=candidates.map((character)=>{const key=stableKey(character);const alreadyAdded=activeKeys.has(key);const image=character.profile?.characterImage;return `<label class="candidate ${alreadyAdded?"disabled":""}"><input class="candidate-check" type="checkbox" value="${escapeHtml(key)}" ${alreadyAdded?"disabled":""} onchange="updateCandidateSelectionCount()"><div class="candidate-avatar">${image?`<img src="${escapeHtml(image)}" alt="">`:""}</div><div><div class="candidate-name">${escapeHtml(character.characterName)}</div><div class="candidate-meta">${escapeHtml(character.characterClassName)} · Lv.${escapeHtml(character.itemAvgLevelText)} · ${escapeHtml(character.serverName)}</div></div><span class="badge">${alreadyAdded?"등록됨":"추가 가능"}</span></label>`;}).join("");}
+function updateCandidateSelectionCount(){const count=document.querySelectorAll(".candidate-check:checked").length;document.getElementById("selectedCount").textContent=`${count}명 선택`;}
+function selectAvailableCharacters(){document.querySelectorAll(".candidate-check").forEach((checkbox)=>{if(!checkbox.disabled){checkbox.checked=true;}});updateCandidateSelectionCount();}
+function addSelectedCharacters(){const selected=[...document.querySelectorAll(".candidate-check:checked")];if(selected.length===0){toast("추가할 캐릭터를 선택해 주세요.");return;}const existingKeys=new Set(state.activeCharacters.map((character)=>character.key));let addedCount=0;selected.forEach((checkbox)=>{const character=state.apiRoster.characters.find((item)=>stableKey(item)===checkbox.value);if(!character||existingKeys.has(checkbox.value)){return;}state.activeCharacters.push({key:checkbox.value,serverName:character.serverName,characterName:character.characterName,characterLevel:character.characterLevel,characterClassName:character.characterClassName,itemAvgLevel:character.itemAvgLevel,itemAvgLevelText:character.itemAvgLevelText,profile:character.profile,favorite:false,weeklyTasks:[]});existingKeys.add(checkbox.value);addedCount+=1;});saveState();closeModal("addModal");render();toast(`${addedCount}명 추가했습니다.`);}
+function openWeeklyModal(characterKey){const character=state.activeCharacters.find((item)=>item.key===characterKey);if(!character){return;}document.getElementById("weeklyCharacterKey").value=characterKey;const image=character.profile?.characterImage;document.getElementById("weeklyCharacterSummary").innerHTML=`<div class="avatar">${image?`<img src="${escapeHtml(image)}" alt="">`:`<div class="avatar-fallback">${escapeHtml(character.characterClassName.slice(0,2)||"LA")}</div>`}</div><div><div class="character-mini-name">${escapeHtml(character.characterName)}</div><div class="character-mini-meta">${escapeHtml(character.characterClassName)} · Lv.${escapeHtml(character.itemAvgLevelText)} · ${escapeHtml(character.serverName)}</div></div>`;renderWeeklyEditor(character.weeklyTasks);const others=state.activeCharacters.filter((item)=>item.key!==characterKey);document.getElementById("copySource").innerHTML=`<option value="">다른 캐릭터 숙제 구성 복사</option>`+others.map((item)=>`<option value="${escapeHtml(item.key)}">${escapeHtml(item.characterName)} · ${item.weeklyTasks.length}개</option>`).join("");openModal("weeklyModal");}
+function taskEditorRow(task){return `<div class="edit-row" data-task-id="${escapeHtml(task.id)}" data-task-done="${task.done?"1":"0"}"><div class="edit-main"><input class="input task-name-input" value="${escapeHtml(task.name)}" placeholder="숙제 이름"><input class="input task-note-input" value="${escapeHtml(task.note||"")}" placeholder="메모 (선택)"></div><select class="select task-category-input">${["레이드","낙원","주간","기타"].map((category)=>`<option value="${category}" ${task.category===category?"selected":""}>${category}</option>`).join("")}</select><button class="remove" type="button" onclick="this.closest('.edit-row').remove()">✕</button></div>`;}
+function renderWeeklyEditor(tasks){document.getElementById("weeklyEditor").innerHTML=tasks.map(taskEditorRow).join("");}
+function addTaskRow(category="주간"){document.getElementById("weeklyEditor").insertAdjacentHTML("beforeend",taskEditorRow({id:uid("task"),name:"",note:"",category,done:false}));const inputs=document.querySelectorAll("#weeklyEditor .task-name-input");if(inputs.length>0){inputs[inputs.length-1].focus();}}
+function collectWeeklyTasks(){return [...document.querySelectorAll("#weeklyEditor .edit-row")].map((row)=>({id:row.dataset.taskId||uid("task"),name:row.querySelector(".task-name-input").value.trim(),note:row.querySelector(".task-note-input").value.trim(),category:row.querySelector(".task-category-input").value,done:row.dataset.taskDone==="1"})).filter((task)=>task.name);}
+function saveWeeklyTasks(){const key=document.getElementById("weeklyCharacterKey").value;const character=state.activeCharacters.find((item)=>item.key===key);if(!character){return;}character.weeklyTasks=collectWeeklyTasks();saveState();closeModal("weeklyModal");render();toast("숙제 구성을 저장했습니다.");}
+function copyTasks(){const sourceKey=document.getElementById("copySource").value;const source=state.activeCharacters.find((item)=>item.key===sourceKey);if(!source){toast("복사할 캐릭터를 선택해 주세요.");return;}const copied=source.weeklyTasks.map((task)=>({id:uid("task"),name:task.name,note:task.note,category:task.category,done:false}));renderWeeklyEditor(copied);toast(`${source.characterName} 구성을 복사했습니다.`);}
+function removeActiveCharacter(){const key=document.getElementById("weeklyCharacterKey").value;const character=state.activeCharacters.find((item)=>item.key===key);if(!character){return;}if(!confirm(`"${character.characterName}"을 숙제판에서 제거할까요?\nAPI 원정대 목록에는 그대로 남습니다.`)){return;}state.activeCharacters=state.activeCharacters.filter((item)=>item.key!==key);saveState();closeModal("weeklyModal");render();}
+function resetWeeklyChecks(showConfirm=true){if(showConfirm&&!confirm("모든 캐릭터의 완료 체크만 초기화할까요?")){return;}state.activeCharacters.forEach((character)=>{character.weeklyTasks.forEach((task)=>{task.done=false;});});state.meta.weeklyCycle=currentWeeklyCycle();saveState();render();if(showConfirm){toast("주간 체크를 초기화했습니다.");}}
+function exportBackup(){const payload={app:"LOA Homework V8",exportedAt:new Date().toISOString(),data:state};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const anchor=document.createElement("a");anchor.href=url;anchor.download=`loa-homework-${new Date().toISOString().slice(0,10)}.json`;anchor.click();URL.revokeObjectURL(url);}
+function resetAllData(){if(!confirm("캐릭터·숙제·API 원정대 캐시를 모두 초기화할까요?")){return;}state=createState();localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(OLD_STORAGE_KEY);localStorage.removeItem(API_KEY_STORAGE);localStorage.removeItem(OLD_API_KEY_STORAGE);closeModal("settingsModal");render();toast("전체 데이터를 초기화했습니다.");}
+function renderSyncText(){document.getElementById("lastSyncText").textContent=state.apiRoster.fetchedAt?`마지막 API 동기화 ${new Date(state.apiRoster.fetchedAt).toLocaleString("ko-KR")}`:"API 동기화 기록 없음";}
+function openModal(id){document.getElementById(id).classList.add("open");}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
+function toast(message){const element=document.getElementById("toast");element.textContent=message;element.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>{element.classList.remove("show");},1900);}
+document.getElementById("settingsBtn").addEventListener("click",openSettings);
+document.getElementById("addCharacterBtn").addEventListener("click",openAddModal);
+document.getElementById("syncTopBtn").addEventListener("click",openSettings);
+document.getElementById("saveSettingsBtn").addEventListener("click",saveSettings);
+document.getElementById("syncSettingsBtn").addEventListener("click",synchronizeRoster);
+document.getElementById("resetWeeklyBtn").addEventListener("click",()=>resetWeeklyChecks(true));
+document.getElementById("exportBtn").addEventListener("click",exportBackup);
+document.getElementById("resetAllBtn").addEventListener("click",resetAllData);
+document.getElementById("candidateSearch").addEventListener("input",renderCandidates);
+document.getElementById("selectAvailableBtn").addEventListener("click",selectAvailableCharacters);
+document.getElementById("confirmAddBtn").addEventListener("click",addSelectedCharacters);
+document.getElementById("copyTasksBtn").addEventListener("click",copyTasks);
+document.getElementById("saveWeeklyBtn").addEventListener("click",saveWeeklyTasks);
+document.getElementById("removeCharacterBtn").addEventListener("click",removeActiveCharacter);
+document.querySelectorAll("[data-quick]").forEach((button)=>{button.addEventListener("click",()=>{addTaskRow(button.dataset.quick);});});
+document.querySelectorAll("[data-close]").forEach((button)=>{button.addEventListener("click",()=>{closeModal(button.dataset.close);});});
+document.querySelectorAll(".modal-bg").forEach((modal)=>{modal.addEventListener("click",(event)=>{if(event.target===modal){closeModal(modal.id);}});});
+document.querySelectorAll(".filter").forEach((button)=>{button.addEventListener("click",()=>{filterMode=button.dataset.filter;document.querySelectorAll(".filter").forEach((item)=>{item.classList.toggle("active",item===button);});renderCharacters();});});
+document.getElementById("characterSearch").addEventListener("input",(event)=>{searchText=event.target.value;renderCharacters();});
+window.addEventListener("keydown",(event)=>{if(event.key!=="Escape"){return;}document.querySelectorAll(".modal-bg.open").forEach((modal)=>closeModal(modal.id));});
+if(!localStorage.getItem(API_KEY_STORAGE)&&localStorage.getItem(OLD_API_KEY_STORAGE)){localStorage.setItem(API_KEY_STORAGE,localStorage.getItem(OLD_API_KEY_STORAGE));}
+render();
+</script>
+</body>
+</html>
