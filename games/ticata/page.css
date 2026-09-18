@@ -24,5 +24,5 @@ html,body{margin:0;min-height:100%;background:#080b10}
   .ticata-page .game-page-back:before{content:"←";font-size:16px}
   .ticata-page .game-page-home{font-size:0;width:32px;height:32px;padding:0;display:grid;place-items:center}
   .ticata-page .game-page-home:before{content:"✓";font-size:12px}
-  .ticata-page.mobile-game .game-modal{height:var(--ticata-vh,100dvh);max-height:var(--ticata-vh,100dvh)}
+  .ticata-page #ticataModal.mobile-game .game-modal{height:var(--ticata-vh,100dvh);max-height:var(--ticata-vh,100dvh)}
 }
