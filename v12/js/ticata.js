@@ -30,6 +30,24 @@ const resultOpponent=document.getElementById('resultOpponent');
 const resultFields=document.getElementById('resultFields');
 const resultTiebreak=document.getElementById('resultTiebreak');
 const resultTotalScore=document.getElementById('resultTotalScore');
+const mobileWidthQuery=window.matchMedia('(max-width: 820px)');
+const coarsePointerQuery=window.matchMedia('(pointer: coarse)');
+
+function useMobileGameLayout(){
+  return mobileWidthQuery.matches||(coarsePointerQuery.matches&&window.innerWidth<=1180);
+}
+function syncMobileGameLayout(){
+  modal.classList.toggle('mobile-game',useMobileGameLayout());
+}
+if(mobileWidthQuery.addEventListener){
+  mobileWidthQuery.addEventListener('change',syncMobileGameLayout);
+  coarsePointerQuery.addEventListener('change',syncMobileGameLayout);
+}else{
+  mobileWidthQuery.addListener(syncMobileGameLayout);
+  coarsePointerQuery.addListener(syncMobileGameLayout);
+}
+window.addEventListener('resize',syncMobileGameLayout,{passive:true});
+syncMobileGameLayout();
 
 const CARD_OPPONENTS=[
   {name:'키에사',grade:'일반',ai:'normal-card'},
@@ -631,7 +649,7 @@ function chooseReroll(which){
 }
 
 document.addEventListener('click',e=>{
-  if(e.target.closest('[data-game-open]')){modal.classList.add('open');renderStats();newMatch();return;}
+  if(e.target.closest('[data-game-open]')){syncMobileGameLayout();modal.classList.add('open');renderStats();newMatch();return;}
   if(e.target.closest('[data-game-close]')){clearMatchTimers();modal.classList.remove('open');return;}
   if(e.target.closest('[data-game-reset]')){newMatch();return;}
   if(e.target.closest('[data-game-next]')){newMatch();return;}
