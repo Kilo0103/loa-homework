@@ -25,10 +25,11 @@ const matchOverlaySub=document.getElementById('matchOverlaySub');
 const resultOverlay=document.getElementById('resultOverlay');
 const resultCard=document.getElementById('resultCard');
 const resultTitle=document.getElementById('resultTitle');
+const resultReason=document.getElementById('resultReason');
 const resultOpponent=document.getElementById('resultOpponent');
-const resultPlayerScore=document.getElementById('resultPlayerScore');
-const resultBotScore=document.getElementById('resultBotScore');
-const resultLines=document.getElementById('resultLines');
+const resultFields=document.getElementById('resultFields');
+const resultTiebreak=document.getElementById('resultTiebreak');
+const resultTotalScore=document.getElementById('resultTotalScore');
 
 const CARD_OPPONENTS=[
   {name:'키에사',grade:'일반',ai:'normal-card'},
@@ -98,13 +99,30 @@ function pairBonus(line){
 }
 function lineScore(line){return line.reduce((s,d)=>s+d.value,0)+pairBonus(line);}
 function totalScore(side){return state.board[side].reduce((s,line)=>s+lineScore(line),0);}
-function lineWins(){
-  let p=0,b=0;
-  for(let i=0;i<3;i++){
-    const ps=lineScore(state.board.player[i]),bs=lineScore(state.board.bot[i]);
-    if(ps>bs)p++; else if(bs>ps)b++;
+function fieldResults(){
+  return [0,1,2].map(i=>{
+    const player=lineScore(state.board.player[i]);
+    const bot=lineScore(state.board.bot[i]);
+    return {index:i,player,bot,result:player>bot?'win':bot>player?'lose':'draw'};
+  });
+}
+function evaluateMatch(){
+  const fields=fieldResults();
+  const p=fields.filter(f=>f.result==='win').length;
+  const b=fields.filter(f=>f.result==='lose').length;
+  const d=fields.filter(f=>f.result==='draw').length;
+  const pt=fields.reduce((s,f)=>s+f.player,0);
+  const bt=fields.reduce((s,f)=>s+f.bot,0);
+  let result='draw',tiebreak=false;
+
+  if(p>b)result='win';
+  else if(b>p)result='lose';
+  else{
+    tiebreak=true;
+    if(pt>bt)result='win';
+    else if(bt>pt)result='lose';
   }
-  return {p,b};
+  return {fields,p,b,d,pt,bt,result,tiebreak};
 }
 function dieHtml(d){
   if(!d)return '<span class="slot-empty">·</span>';
@@ -193,14 +211,28 @@ function showMatchOverlay(title,sub,matched=false){
 }
 function hideMatchOverlay(){matchOverlay.classList.remove('show','matched');}
 function hideResultOverlay(){resultOverlay.classList.remove('show');resultCard.classList.remove('win','lose','draw');}
-function showResultOverlay(result,w,pt,bt){
-  resultTitle.textContent=result==='win'?'승리':result==='lose'?'패배':'무승부';
+function showResultOverlay(match){
+  resultTitle.textContent=match.result==='win'?'승리':match.result==='lose'?'패배':'무승부';
   resultOpponent.textContent=`${state.opponentName} · ${state.opponentGrade} 카드`;
-  resultPlayerScore.textContent=String(pt);
-  resultBotScore.textContent=String(bt);
-  resultLines.textContent=`라인 ${w.p} : ${w.b}`;
+  resultReason.textContent=match.tiebreak
+    ? `${match.p}승 ${match.d}무 ${match.b}패 · 필드 승수 동률`
+    : `${match.p} : ${match.b} 필드 ${match.result==='win'?'승리':'패배'}`;
+
+  resultFields.innerHTML=match.fields.map(f=>{
+    const label=f.result==='win'?'승':f.result==='lose'?'패':'무';
+    return `<div class="result-field ${f.result}">
+      <span>${f.index+1}필드</span>
+      <b>${f.player}</b>
+      <em>:</em>
+      <b>${f.bot}</b>
+      <strong>${label}</strong>
+    </div>`;
+  }).join('');
+
+  resultTiebreak.hidden=!match.tiebreak;
+  resultTotalScore.textContent=`${match.pt} : ${match.bt}`;
   resultCard.classList.remove('win','lose','draw');
-  resultCard.classList.add(result);
+  resultCard.classList.add(match.result);
   resultOverlay.classList.add('show');
 }
 function clearMatchTimers(){
@@ -548,20 +580,25 @@ function finish(){
   state.phase='over';
   state.current=null;
   state.alt=null;
-  const w=lineWins(),pt=totalScore('player'),bt=totalScore('bot');
-  let result='draw';
-  if(w.p>=2)result='win';
-  else if(w.b>=2)result='lose';
-  else if(pt>bt)result='win';
-  else if(bt>pt)result='lose';
+
+  const match=evaluateMatch();
   const s=stats();
-  if(result==='win'){s.win++;statusEl.textContent=`승리 · 라인 ${w.p}:${w.b}`;}
-  else if(result==='lose'){s.lose++;statusEl.textContent=`패배 · 라인 ${w.p}:${w.b}`;}
-  else{s.draw++;statusEl.textContent='무승부';}
+  if(match.result==='win'){
+    s.win++;
+    statusEl.textContent=match.tiebreak?'승리 · 총점 판정':`승리 · 필드 ${match.p}:${match.b}`;
+  }else if(match.result==='lose'){
+    s.lose++;
+    statusEl.textContent=match.tiebreak?'패배 · 총점 판정':`패배 · 필드 ${match.p}:${match.b}`;
+  }else{
+    s.draw++;
+    statusEl.textContent='무승부';
+  }
   saveStats(s);
-  hintEl.textContent=`최종 점수 ${pt} : ${bt}`;
+  hintEl.textContent=match.tiebreak
+    ? `필드 승수 동률 · 총점 ${match.pt} : ${match.bt}`
+    : `필드 결과 ${match.p}승 ${match.d}무 ${match.b}패`;
   render();
-  setTimeout(()=>showResultOverlay(result,w,pt,bt),360);
+  setTimeout(()=>showResultOverlay(match),360);
 }
 function doReroll(){
   if(state.turn!=='player'||state.phase!=='place'||!state.current||!state.reroll.player||state.current.bonus||state.over||dieAnimating)return;
