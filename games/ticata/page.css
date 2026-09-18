@@ -1,77 +1,336 @@
-html,body{margin:0;min-height:100%;background:#080b10}
-.ticata-page{min-height:100dvh;overflow:hidden}
+html,body{margin:0;width:100%;height:100%;min-height:100%;background:#080b10}
+body.ticata-page{overflow:hidden}
+.ticata-page *{box-sizing:border-box}
+
 .ticata-page #ticataModal{
-  display:grid;
+  --page-h:var(--ticata-vh,100dvh);
   position:fixed;
   inset:0;
-  padding:16px;
+  width:100%;
+  height:var(--page-h);
+  min-width:0;
+  overflow:hidden;
   background:radial-gradient(circle at 50% -10%,#182232 0,#0b0f15 42%,#07090d 100%);
-  backdrop-filter:none;
 }
-.ticata-page .game-page-head{
-  min-height:58px;
+
+.ticata-page .ticata-game-shell{
   position:relative;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  display:grid;
+  grid-template-rows:54px minmax(0,1fr);
+  overflow:hidden;
+}
+
+.ticata-page .ticata-page-header{
+  min-width:0;
+  min-height:0;
+  height:54px;
+  border-bottom:1px solid #283345;
+  background:rgba(10,14,20,.96);
   display:grid;
   grid-template-columns:1fr auto 1fr;
   align-items:center;
-  padding:0 16px;
+  padding:0 18px;
+  z-index:30;
 }
-.ticata-page .game-page-title{text-align:center}
-.ticata-page .game-page-title h2{font-size:14px}
+
+.ticata-page .game-page-title{text-align:center;min-width:0}
+.ticata-page .game-page-title h2{font-size:13px;margin:0}
+.ticata-page .game-rule-note{font-size:8px;margin-top:2px}
 .ticata-page .game-page-back,.ticata-page .game-page-home{
   font-size:8px;font-weight:900;color:#9aa8ba;text-decoration:none
 }
 .ticata-page .game-page-home{
-  justify-self:end;border:1px solid #334055;background:#151b24;
-  padding:7px 10px;border-radius:8px;color:#d8e0ea
+  justify-self:end;
+  border:1px solid #334055;
+  background:#151b24;
+  padding:7px 10px;
+  border-radius:8px;
+  color:#d8e0ea
 }
 
-/* Desktop-only presentation. Never let these values override the dedicated mobile game layout. */
-@media(min-width:821px){
-  .ticata-page .game-modal{
-    width:min(1180px,calc(100vw - 32px));
-    max-height:calc(100dvh - 32px);
-    height:auto;
-    overflow:hidden;
-    border-color:#334055;
-    border-radius:18px;
-    box-shadow:0 30px 110px rgba(0,0,0,.52);
-  }
-  .ticata-page .ticata-wrap{padding:16px 18px 18px}
-  .ticata-page .ticata-arena{
-    grid-template-columns:minmax(300px,1fr) 260px minmax(300px,1fr);
-    gap:18px
-  }
-  .ticata-page .tika-side{padding:14px}
-  .ticata-page .tika-board{gap:9px}
-  .ticata-page .tika-line{min-height:62px}
-  .ticata-page .ticata-topline{margin-bottom:14px}
+.ticata-page #ticataModal .ticata-wrap{
+  width:min(1280px,100%);
+  min-width:0;
+  min-height:0;
+  height:100%;
+  margin:0 auto;
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  gap:8px;
+  padding:10px 16px 8px;
+  background:transparent;
 }
 
-/* Standalone mobile shell only. The actual game sizing remains owned by ux.css .mobile-game rules. */
+.ticata-page #ticataModal .ticata-topline{
+  min-width:0;
+  min-height:48px;
+  margin:0;
+  padding:8px 10px;
+  border:1px solid #263244;
+  border-radius:12px;
+  background:rgba(16,22,31,.86);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.ticata-page #ticataModal .ticata-top-actions{min-width:0}
+.ticata-page #ticataModal .match-badge{min-width:145px}
+
+.ticata-page #ticataModal .ticata-arena{
+  min-width:0;
+  min-height:0;
+  height:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) clamp(170px,18vw,235px) minmax(0,1fr);
+  gap:14px;
+  align-items:stretch;
+  overflow:hidden;
+}
+
+.ticata-page #ticataModal .tika-side{
+  min-width:0;
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+  padding:10px;
+  border-radius:14px;
+  display:grid;
+  gap:6px;
+  align-content:stretch;
+}
+.ticata-page #ticataModal .player-side{
+  grid-template-rows:auto clamp(68px,14vh,92px) auto minmax(0,1fr);
+}
+.ticata-page #ticataModal .bot-side{
+  grid-template-rows:auto clamp(68px,14vh,92px) auto minmax(0,1fr);
+}
+.ticata-page #ticataModal .tika-side-head{margin:0;min-height:20px}
+.ticata-page #ticataModal .side-board-label{min-height:13px;align-items:center}
+.ticata-page #ticataModal .side-dice-panel{
+  min-width:0;
+  min-height:0;
+  height:100%;
+  padding:5px 8px;
+  grid-template-columns:1fr 62px 1fr;
+  column-gap:6px;
+}
+.ticata-page #ticataModal .side-dice-panel .dice-stage{
+  width:58px;height:58px
+}
+.ticata-page #ticataModal .dice-cube{width:52px;height:52px}
+.ticata-page #ticataModal .die-face.f1{transform:translateZ(26px)}
+.ticata-page #ticataModal .die-face.f6{transform:rotateY(180deg) translateZ(26px)}
+.ticata-page #ticataModal .die-face.f2{transform:rotateY(90deg) translateZ(26px)}
+.ticata-page #ticataModal .die-face.f5{transform:rotateY(-90deg) translateZ(26px)}
+.ticata-page #ticataModal .die-face.f3{transform:rotateX(90deg) translateZ(26px)}
+.ticata-page #ticataModal .die-face.f4{transform:rotateX(-90deg) translateZ(26px)}
+
+.ticata-page #ticataModal .tika-board{
+  min-width:0;
+  min-height:0;
+  height:100%;
+  display:grid;
+  grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:5px;
+}
+.ticata-page #ticataModal .tika-line{
+  min-width:0;
+  min-height:0;
+  height:100%;
+  max-height:none;
+  padding:5px 7px;
+  grid-template-columns:30px minmax(0,1fr) 30px;
+}
+.ticata-page #ticataModal .dice-row{
+  grid-template-columns:repeat(3,clamp(36px,4.3vh,44px));
+  gap:5px;
+}
+.ticata-page #ticataModal .board-die,
+.ticata-page #ticataModal .slot-empty{
+  width:clamp(36px,4.3vh,44px);
+  height:clamp(36px,4.3vh,44px);
+}
+
+.ticata-page #ticataModal .tika-center{
+  min-width:0;
+  min-height:0;
+  height:100%;
+  position:static;
+  top:auto;
+  padding:12px 9px;
+  display:grid;
+  align-content:center;
+  justify-items:stretch;
+  gap:8px;
+  overflow:hidden;
+}
+.ticata-page #ticataModal .versus-mark{margin:0}
+.ticata-page #ticataModal .roll-btn{width:100%;max-width:none;min-height:42px}
+.ticata-page #ticataModal #rerollBtn{width:100%}
+.ticata-page #ticataModal .game-hint{max-width:none;min-height:20px}
+.ticata-page #ticataModal .reroll-choice{width:100%}
+.ticata-page #ticataModal .ticata-legend{margin:0;min-height:16px}
+
+.ticata-page #ticataModal .match-overlay,
+.ticata-page #ticataModal .result-overlay{
+  position:absolute;
+  inset:54px 0 0;
+  z-index:40;
+}
+
+/* Short desktop / landscape windows: prioritize fitting the whole board. */
+@media(min-width:821px) and (max-height:700px){
+  .ticata-page .ticata-game-shell{grid-template-rows:46px minmax(0,1fr)}
+  .ticata-page .ticata-page-header{height:46px}
+  .ticata-page #ticataModal .ticata-wrap{padding:6px 8px;gap:5px}
+  .ticata-page #ticataModal .ticata-topline{min-height:40px;padding:5px 8px}
+  .ticata-page #ticataModal .ticata-arena{gap:8px}
+  .ticata-page #ticataModal .tika-side{padding:6px;gap:3px}
+  .ticata-page #ticataModal .player-side,
+  .ticata-page #ticataModal .bot-side{grid-template-rows:auto 58px auto minmax(0,1fr)}
+  .ticata-page #ticataModal .side-dice-panel{height:58px;padding:2px 6px}
+  .ticata-page #ticataModal .side-dice-panel .dice-stage{width:50px;height:50px}
+  .ticata-page #ticataModal .dice-cube{width:46px;height:46px}
+  .ticata-page #ticataModal .die-face.f1{transform:translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f6{transform:rotateY(180deg) translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f2{transform:rotateY(90deg) translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f5{transform:rotateY(-90deg) translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f3{transform:rotateX(90deg) translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f4{transform:rotateX(-90deg) translateZ(23px)}
+  .ticata-page #ticataModal .tika-line{padding:3px 6px}
+  .ticata-page #ticataModal .dice-row{grid-template-columns:repeat(3,36px);gap:4px}
+  .ticata-page #ticataModal .board-die,
+  .ticata-page #ticataModal .slot-empty{width:36px;height:36px}
+  .ticata-page #ticataModal .tika-center{padding:7px 7px;gap:5px}
+  .ticata-page #ticataModal .roll-btn{min-height:36px;height:36px}
+  .ticata-page #ticataModal .game-hint{font-size:7px}
+  .ticata-page #ticataModal .ticata-legend{display:none}
+  .ticata-page #ticataModal .match-overlay,
+  .ticata-page #ticataModal .result-overlay{inset:46px 0 0}
+}
+
+/* Narrow screens use the dedicated vertical game layout. */
 @media(max-width:820px){
-  .ticata-page #ticataModal{
-    padding:0;
-    place-items:stretch;
+  .ticata-page .ticata-game-shell{
+    grid-template-rows:50px minmax(0,1fr);
   }
-  .ticata-page #ticataModal.mobile-game .game-modal{
-    width:100%;
-    max-width:none;
-    height:var(--ticata-vh,100dvh);
-    max-height:var(--ticata-vh,100dvh);
-    border:0;
-    border-radius:0;
-  }
-  .ticata-page #ticataModal.mobile-game .game-page-head{
+  .ticata-page .ticata-page-header{
+    height:50px;
     min-height:50px;
     grid-template-columns:auto 1fr auto;
     padding:0 10px;
   }
-  .ticata-page #ticataModal.mobile-game .game-page-title h2{font-size:11px}
-  .ticata-page #ticataModal.mobile-game .game-page-back{font-size:0}
-  .ticata-page #ticataModal.mobile-game .game-page-back:before{content:"←";font-size:16px}
-  .ticata-page #ticataModal.mobile-game .game-page-home{
+  .ticata-page .game-page-title h2{font-size:11px}
+  .ticata-page .game-page-back{font-size:0}
+  .ticata-page .game-page-back:before{content:"←";font-size:16px}
+  .ticata-page .game-page-home{
     font-size:0;width:32px;height:32px;padding:0;display:grid;place-items:center
   }
-  .ticata-page #ticataModal.mobile-game .game-page-home:before{content:"✓";font-size:12px}
+  .ticata-page .game-page-home:before{content:"✓";font-size:12px}
+
+  .ticata-page #ticataModal .ticata-wrap{
+    width:100%;
+    min-height:0;
+    height:100%;
+    padding:7px 7px calc(7px + env(safe-area-inset-bottom));
+    gap:6px;
+    grid-template-rows:auto minmax(0,1fr);
+  }
+  .ticata-page #ticataModal .ticata-topline{
+    min-height:48px;
+    padding:6px 8px;
+  }
+  .ticata-page #ticataModal .ticata-arena{
+    height:100%;
+    grid-template-columns:1fr;
+    grid-template-rows:minmax(0,43fr) minmax(70px,14fr) minmax(0,43fr);
+    gap:6px;
+  }
+  .ticata-page #ticataModal .bot-side{grid-row:1}
+  .ticata-page #ticataModal .tika-center{grid-row:2}
+  .ticata-page #ticataModal .player-side{grid-row:3}
+
+  .ticata-page #ticataModal .tika-side{
+    width:100%;
+    height:100%;
+    padding:6px 7px;
+    gap:4px;
+  }
+  .ticata-page #ticataModal .bot-side{
+    grid-template-rows:auto auto minmax(0,1fr) 54px;
+  }
+  .ticata-page #ticataModal .player-side{
+    grid-template-rows:auto 54px auto minmax(0,1fr);
+  }
+  .ticata-page #ticataModal .bot-side .tika-side-head{order:1}
+  .ticata-page #ticataModal .bot-side .side-board-label{order:2}
+  .ticata-page #ticataModal .bot-side .tika-board{order:3}
+  .ticata-page #ticataModal .bot-side .side-dice-panel{order:4}
+  .ticata-page #ticataModal .player-side .tika-side-head{order:1}
+  .ticata-page #ticataModal .player-side .side-dice-panel{order:2}
+  .ticata-page #ticataModal .player-side .side-board-label{order:3}
+  .ticata-page #ticataModal .player-side .tika-board{order:4}
+
+  .ticata-page #ticataModal .side-board-label small{display:none}
+  .ticata-page #ticataModal .side-dice-panel{
+    height:54px;
+    min-height:0;
+    grid-template-columns:1fr 54px 1fr;
+    padding:2px 6px;
+  }
+  .ticata-page #ticataModal .side-dice-panel .dice-stage{width:50px;height:50px}
+  .ticata-page #ticataModal .dice-cube{width:46px;height:46px}
+  .ticata-page #ticataModal .die-face.f1{transform:translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f6{transform:rotateY(180deg) translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f2{transform:rotateY(90deg) translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f5{transform:rotateY(-90deg) translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f3{transform:rotateX(90deg) translateZ(23px)}
+  .ticata-page #ticataModal .die-face.f4{transform:rotateX(-90deg) translateZ(23px)}
+  .ticata-page #ticataModal .tika-line{
+    min-height:0;height:100%;padding:3px 6px;
+    grid-template-columns:28px minmax(0,1fr) 28px
+  }
+  .ticata-page #ticataModal .dice-row{
+    --page-mobile-die:clamp(34px,5.1vh,44px);
+    grid-template-columns:repeat(3,var(--page-mobile-die));
+    gap:4px
+  }
+  .ticata-page #ticataModal .board-die,
+  .ticata-page #ticataModal .slot-empty{
+    width:var(--page-mobile-die);
+    height:var(--page-mobile-die)
+  }
+  .ticata-page #ticataModal .tika-center{
+    position:static;
+    inset:auto;
+    width:100%;
+    height:100%;
+    min-height:0;
+    padding:5px 8px;
+    border-radius:12px;
+    box-shadow:none;
+    display:grid;
+    align-content:center;
+    gap:4px;
+  }
+  .ticata-page #ticataModal .versus-mark{display:none}
+  .ticata-page #ticataModal .game-hint{order:1;font-size:8px;min-height:14px}
+  .ticata-page #ticataModal .roll-btn{order:2;min-height:38px;height:38px;font-size:10px}
+  .ticata-page #ticataModal #rerollBtn{order:2;min-height:36px;height:36px}
+  .ticata-page #ticataModal .reroll-choice{order:3}
+  .ticata-page #ticataModal .ticata-legend{display:none}
+  .ticata-page #ticataModal .match-overlay,
+  .ticata-page #ticataModal .result-overlay{inset:50px 0 0}
+}
+
+@media(max-width:420px){
+  .ticata-page #ticataModal .ticata-top-actions{gap:4px}
+  .ticata-page #ticataModal .match-badge{min-width:0;max-width:145px;padding:5px 7px}
+  .ticata-page #ticataModal [data-game-reset]{padding-inline:8px;min-height:34px}
 }
