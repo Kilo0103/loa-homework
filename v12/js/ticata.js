@@ -57,11 +57,17 @@ function useMobileGameLayout(){
   if(browserReportsMobile()&&phoneSizedScreen())return true;
   return false;
 }
+function syncMobileViewportHeight(){
+  const height=Math.round(window.visualViewport?.height||window.innerHeight);
+  modal.style.setProperty('--ticata-vh',`${height}px`);
+  modal.dataset.viewportHeight=String(height);
+}
 function syncMobileGameLayout(){
   const mobile=useMobileGameLayout();
   modal.classList.toggle('mobile-game',mobile);
   modal.dataset.layout=mobile?'mobile':'desktop';
   modal.dataset.viewport=String(window.innerWidth);
+  syncMobileViewportHeight();
 }
 if(mobileWidthQuery.addEventListener){
   mobileWidthQuery.addEventListener('change',syncMobileGameLayout);
@@ -71,6 +77,9 @@ if(mobileWidthQuery.addEventListener){
   coarsePointerQuery.addListener(syncMobileGameLayout);
 }
 window.addEventListener('resize',syncMobileGameLayout,{passive:true});
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',syncMobileViewportHeight,{passive:true});
+}
 syncMobileGameLayout();
 
 const CARD_OPPONENTS=[
