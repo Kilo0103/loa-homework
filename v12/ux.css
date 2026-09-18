@@ -46,13 +46,13 @@
 .mobile-game .dice-row{grid-template-columns:repeat(3,48px);gap:6px}
 .mobile-game .board-die,.mobile-game .slot-empty{width:48px;height:48px;border-radius:10px}.mobile-game .board-die b{font-size:18px}.mobile-game .board-die.shield i{font-size:8px}
 .mobile-game .side-dice-panel{min-height:84px;grid-template-columns:1fr 72px 1fr;column-gap:8px;padding:7px 10px;border-radius:12px}
-.mobile-game .side-dice-panel .dice-stage{grid-column:2;grid-row:1/3;width:66px;height:66px}.mobile-game .side-dice-panel .dice-cube{transform:scale(.9)}
+.mobile-game .side-dice-panel .dice-stage{grid-column:2;grid-row:1/3;width:66px;height:66px}
 .mobile-game .side-dice-panel .dice-owner-title{font-size:9px;justify-self:end}.mobile-game .side-dice-panel>small{grid-column:3;grid-row:1/3;min-width:0;font-size:8px;text-align:left}
 .mobile-game .tika-center{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:10;min-height:0;padding:10px 12px;border:1px solid #3b4b62;border-radius:16px;background:rgba(14,20,29,.96);backdrop-filter:blur(16px);box-shadow:0 -8px 36px rgba(0,0,0,.38);display:grid;grid-template-columns:1fr;gap:7px;align-content:center}
 .mobile-game .versus-mark{display:none}.mobile-game .game-hint{order:1;max-width:none;min-height:0;font-size:9px;line-height:1.35;color:#b8c2d2}
 .mobile-game .roll-btn{order:2;width:100%;max-width:none;min-height:50px;font-size:12px;font-weight:1000;touch-action:manipulation}
 .mobile-game #rerollBtn{order:2;width:100%;min-height:46px;font-size:10px;touch-action:manipulation}
-.mobile-game .reroll-choice{order:3;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mobile-game .reroll-choice{order:3;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:7px}.mobile-game .reroll-choice[hidden]{display:none}
 .mobile-game .reroll-choice span{grid-column:1/-1;font-size:8px}.mobile-game .reroll-choice .btn{min-height:46px;font-size:10px;touch-action:manipulation}
 .mobile-game .ticata-legend{display:none}
 .mobile-game .match-overlay,.mobile-game .result-overlay{position:fixed;inset:calc(50px + env(safe-area-inset-top)) 0 0;z-index:20;padding:16px}
