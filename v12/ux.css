@@ -75,3 +75,149 @@
   .top-actions [data-game-open]{display:inline-grid!important;width:31px;height:31px;padding:0;place-items:center;font-size:0}
   .top-actions [data-game-open]::before{content:"🎮";font-size:14px;line-height:1}
 }
+
+/* Part 14: mobile height-ratio layout */
+.mobile-game .game-modal{
+  height:var(--ticata-vh,100dvh);
+  max-height:var(--ticata-vh,100dvh);
+}
+.mobile-game .ticata-wrap{
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+  gap:8px;
+  min-height:0;
+  overflow:hidden;
+  padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+}
+.mobile-game .ticata-topline{
+  margin:0;
+  min-height:52px;
+  padding:7px 9px;
+  flex:0 0 auto;
+}
+.mobile-game .ticata-arena{
+  min-height:0;
+  height:100%;
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:minmax(0,43fr) minmax(76px,14fr) minmax(0,43fr);
+  gap:7px;
+  overflow:hidden;
+}
+.mobile-game .bot-side{grid-row:1;order:initial}
+.mobile-game .tika-center{
+  grid-row:2;
+  order:initial;
+  position:static;
+  inset:auto;
+  width:100%;
+  min-height:0;
+  height:100%;
+  padding:7px 10px;
+  border-radius:13px;
+  box-shadow:none;
+  display:grid;
+  align-content:center;
+  gap:5px;
+}
+.mobile-game .player-side{grid-row:3;order:initial}
+.mobile-game .tika-side{
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+  padding:7px 8px;
+  gap:5px;
+  align-content:stretch;
+}
+.mobile-game .bot-side{
+  grid-template-rows:auto auto minmax(0,1fr) auto;
+}
+.mobile-game .player-side{
+  grid-template-rows:auto auto auto minmax(0,1fr);
+}
+.mobile-game .tika-side-head{
+  min-height:20px;
+}
+.mobile-game .side-board-label{
+  min-height:12px;
+  align-items:center;
+}
+.mobile-game .side-board-label small{
+  display:none;
+}
+.mobile-game .tika-board{
+  min-height:0;
+  height:100%;
+  display:grid;
+  grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:4px;
+}
+.mobile-game .tika-line{
+  min-height:0;
+  height:100%;
+  max-height:none;
+  padding:4px 7px;
+  grid-template-columns:30px 1fr 30px;
+  border-radius:10px;
+}
+.mobile-game .dice-row{
+  --mobile-board-die:clamp(36px,calc(var(--ticata-vh,800px) * .052),46px);
+  grid-template-columns:repeat(3,var(--mobile-board-die));
+  gap:5px;
+}
+.mobile-game .board-die,.mobile-game .slot-empty{
+  width:var(--mobile-board-die);
+  height:var(--mobile-board-die);
+  border-radius:9px;
+}
+.mobile-game .board-die b{font-size:clamp(14px,2.2vh,18px)}
+.mobile-game .side-dice-panel{
+  min-height:0;
+  height:clamp(54px,calc(var(--ticata-vh,800px) * .082),70px);
+  grid-template-columns:1fr 62px 1fr;
+  column-gap:6px;
+  padding:4px 8px;
+}
+.mobile-game .side-dice-panel .dice-stage{
+  width:58px;
+  height:58px;
+}
+.mobile-game .dice-stage{width:58px;height:58px}
+.mobile-game .dice-cube{width:52px;height:52px}
+.mobile-game .die-face.f1{transform:translateZ(26px)}
+.mobile-game .die-face.f6{transform:rotateY(180deg) translateZ(26px)}
+.mobile-game .die-face.f2{transform:rotateY(90deg) translateZ(26px)}
+.mobile-game .die-face.f5{transform:rotateY(-90deg) translateZ(26px)}
+.mobile-game .die-face.f3{transform:rotateX(90deg) translateZ(26px)}
+.mobile-game .die-face.f4{transform:rotateX(-90deg) translateZ(26px)}
+.mobile-game .game-hint{
+  min-height:16px;
+  font-size:8px;
+  line-height:1.25;
+}
+.mobile-game .roll-btn{
+  min-height:42px;
+  height:42px;
+  font-size:11px;
+}
+.mobile-game #rerollBtn{
+  min-height:40px;
+  height:40px;
+}
+.mobile-game .reroll-choice .btn{
+  min-height:38px;
+}
+.mobile-game .match-overlay,.mobile-game .result-overlay{
+  inset:calc(50px + env(safe-area-inset-top)) 0 0;
+}
+@media(max-height:720px){
+  .mobile-game .modal-head{min-height:46px}
+  .mobile-game .ticata-topline{min-height:46px;padding:5px 8px}
+  .mobile-game .ticata-arena{grid-template-rows:minmax(0,44fr) minmax(68px,12fr) minmax(0,44fr);gap:5px}
+  .mobile-game .tika-side{padding:5px 7px;gap:3px}
+  .mobile-game .side-dice-panel{height:50px}
+  .mobile-game .side-dice-panel .dice-stage,.mobile-game .dice-stage{width:50px;height:50px}
+  .mobile-game .dice-cube{width:46px;height:46px}
+  .mobile-game .roll-btn{min-height:38px;height:38px}
+  .mobile-game .game-hint{font-size:7px}
+}
