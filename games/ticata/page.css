@@ -342,3 +342,11 @@ body.ticata-page{overflow:hidden}
   .ticata-page #ticataModal .match-badge{min-width:0;max-width:145px;padding:5px 7px}
   .ticata-page #ticataModal [data-game-reset]{padding-inline:8px;min-height:34px}
 }
+
+
+/* Part 21: a die exists in the hand only between roll and placement. */
+.ticata-page #ticataModal .dice-cube.cleared{
+  visibility:hidden;
+  animation:none!important;
+  transform:none!important;
+}
