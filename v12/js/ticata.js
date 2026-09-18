@@ -134,7 +134,11 @@ function renderBoard(side,root){
     const rival=lineScore(state.board[other(side)][i]);
     const lead=score>rival?'ahead':score<rival?'behind':'tied';
     const slots=[...line];
-    while(slots.length<3)slots.push(null);
+    if(side==='player'){
+      while(slots.length<3)slots.unshift(null);
+    }else{
+      while(slots.length<3)slots.push(null);
+    }
     const can=canPlace(side,i);
     const flicked=lastFlick&&lastFlick.line===i&&(lastFlick.side===side||lastFlick.attacker===side);
     return `<button class="tika-line ${lead} ${can?'placeable':''} ${flicked?'flicked':''}" data-game-place data-side="${side}" data-line="${i}" ${can?'':'disabled'}>
