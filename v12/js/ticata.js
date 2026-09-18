@@ -34,28 +34,34 @@ const mobileWidthQuery=window.matchMedia('(max-width: 820px)');
 const coarsePointerQuery=window.matchMedia('(pointer: coarse)');
 
 function browserReportsMobile(){
-  if(navigator.userAgentData&&typeof navigator.userAgentData.mobile==='boolean'){
-    return navigator.userAgentData.mobile;
-  }
-  return /Android|iPhone|iPod|Mobile|IEMobile|Opera Mini/i.test(navigator.userAgent||'');
+  const ua=navigator.userAgent||'';
+  const uaLooksMobile=/Android|iPhone|iPod|Mobile|IEMobile|Opera Mini/i.test(ua);
+  if(navigator.userAgentData&&navigator.userAgentData.mobile===true)return true;
+  return uaLooksMobile;
+}
+function phoneSizedScreen(){
+  const sw=window.screen?.width||window.innerWidth;
+  const sh=window.screen?.height||window.innerHeight;
+  return Math.min(sw,sh)<=600;
 }
 function likelyDesktopSiteMode(){
-  if(!coarsePointerQuery.matches)return false;
-  const shortScreen=Math.min(window.screen?.width||window.innerWidth,window.screen?.height||window.innerHeight);
-  const phoneSizedScreen=shortScreen<=600;
-  const desktopLikeUA=!browserReportsMobile();
-  const desktopLikeViewport=window.innerWidth>820;
-  return desktopLikeUA&&(desktopLikeViewport||phoneSizedScreen);
+  const wideDesktopViewport=window.innerWidth>=900;
+  const uaLooksDesktop=!browserReportsMobile();
+  return coarsePointerQuery.matches&&phoneSizedScreen()&&wideDesktopViewport&&uaLooksDesktop;
 }
 function useMobileGameLayout(){
+  // A genuinely narrow viewport is always the mobile game UI, even if
+  // UA Client Hints are missing or misleading in an in-app/Samsung browser.
+  if(window.innerWidth<=820)return true;
   if(likelyDesktopSiteMode())return false;
-  if(browserReportsMobile())return true;
-  return mobileWidthQuery.matches;
+  if(browserReportsMobile()&&phoneSizedScreen())return true;
+  return false;
 }
 function syncMobileGameLayout(){
   const mobile=useMobileGameLayout();
   modal.classList.toggle('mobile-game',mobile);
   modal.dataset.layout=mobile?'mobile':'desktop';
+  modal.dataset.viewport=String(window.innerWidth);
 }
 if(mobileWidthQuery.addEventListener){
   mobileWidthQuery.addEventListener('change',syncMobileGameLayout);
