@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090b10">
+  <title>티카투카 · LOA HUB</title>
+  <link rel="stylesheet" href="../../v12/style.css?v=14">
+  <link rel="stylesheet" href="../../v12/ux.css?v=27">
+  <link rel="stylesheet" href="./page.css?v=1">
+</head>
+<body class="ticata-page">
+<div class="modal-bg open" id="ticataModal" data-game-page="true"><div class="modal game-modal"><div class="modal-head game-page-head"><a class="game-page-back" href="../../">← LOA HUB</a><div class="game-page-title"><h2>티카투카 · BOT</h2><small class="game-rule-note">3줄 중 2줄을 이기면 승리</small></div><a class="game-page-home" href="../../homework/">숙제 체크</a></div><div class="modal-body ticata-wrap">
+<div class="ticata-topline"><div><strong id="ticataStatus">매칭 대기</strong><span id="ticataStats">승 0 · 무 0 · 패 0</span></div><div class="ticata-top-actions"><div id="matchBadge" class="match-badge"><span class="match-dot"></span><div><b id="opponentName">상대 찾는 중</b><small id="opponentLevel">MATCHMAKING</small></div></div><button class="btn small" data-game-reset>다시 매칭</button></div></div>
+<div class="ticata-arena">
+<section class="tika-side player-side">
+  <div class="tika-side-head"><div class="side-name"><b>ME</b><small id="playerOrderBadge" class="turn-order-badge first">선공</small></div><span id="playerTotal">0점</span></div>
+  <div id="playerDicePanel" class="dice-owner-panel player side-dice-panel"><span class="dice-owner-title">내 주사위</span><div class="dice-stage"><div id="playerDiceCube" class="dice-cube face-1 idle"><span class="die-face f1">1</span><span class="die-face f2">2</span><span class="die-face f3">3</span><span class="die-face f4">4</span><span class="die-face f5">5</span><span class="die-face f6">6</span></div></div><small id="playerDieType">대기</small></div>
+  <div class="side-board-label"><span>내 필드</span><small>주사위를 배치할 줄을 선택</small></div>
+  <div id="playerBoard" class="tika-board"></div>
+</section>
+<div class="tika-center">
+  <div class="versus-mark"><span>ME</span><b>VS</b><span>BOT</span></div>
+  <button id="rollBtn" class="btn primary roll-btn" data-game-roll>주사위 굴리기</button>
+  <button id="rerollBtn" class="btn small" data-game-reroll hidden>타짜의 손놀림 · 1회</button>
+  <div id="rerollChoice" class="reroll-choice" hidden></div>
+  <div id="gameHint" class="game-hint">매칭을 기다리는 중...</div>
+</div>
+<section class="tika-side bot-side">
+  <div class="tika-side-head"><div class="side-name"><b>BOT</b><small id="botOrderBadge" class="turn-order-badge second">후공</small></div><span id="botTotal">0점</span></div>
+  <div id="botDicePanel" class="dice-owner-panel bot side-dice-panel"><span class="dice-owner-title">상대 주사위</span><div class="dice-stage"><div id="botDiceCube" class="dice-cube face-1 idle"><span class="die-face f1">1</span><span class="die-face f2">2</span><span class="die-face f3">3</span><span class="die-face f4">4</span><span class="die-face f5">5</span><span class="die-face f6">6</span></div></div><small id="botDieType">대기</small></div>
+  <div class="side-board-label"><span>상대 필드</span><small>상대가 선택한 줄</small></div>
+  <div id="botBoard" class="tika-board"></div>
+</section>
+</div>
+<div class="ticata-legend"><span><i class="legend-die player"></i> 내 주사위</span><span><i class="legend-die enemy"></i> 상대 주사위</span><span><i class="legend-die shield"></i> 실드</span><span>알까기 성공 → 보너스 실드</span></div><div id="matchOverlay" class="match-overlay"><div class="match-spinner"></div><strong id="matchOverlayTitle">상대 찾는 중...</strong><span id="matchOverlaySub">티카투카 매칭을 검색하고 있습니다.</span></div>
+<div id="resultOverlay" class="result-overlay">
+  <div id="resultCard" class="result-card">
+    <span class="result-kicker">MATCH RESULT</span>
+    <strong id="resultTitle">승리</strong>
+    <span id="resultReason" class="result-reason">2 : 1 필드 승리</span>
+    <span id="resultOpponent" class="result-opponent">상대 · 등급</span>
+    <div id="resultFields" class="result-fields"></div>
+    <div id="resultTiebreak" class="result-tiebreak" hidden>
+      <span>총점 판정</span>
+      <b id="resultTotalScore">0 : 0</b>
+    </div>
+    <div class="result-actions">
+      <button class="btn primary result-next" data-game-next>다음 상대 찾기</button>
+      <button class="btn" data-game-close>닫기</button>
+    </div>
+  </div>
+</div>
+</div></div></div>
+
+<script type="module" src="../../v12/js/ticata.js?v=31"></script>
+</body>
+</html>
