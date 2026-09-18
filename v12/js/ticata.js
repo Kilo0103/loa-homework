@@ -1,5 +1,6 @@
 const KEY='loa-homework:ticata-stats-v2';
 const modal=document.getElementById('ticataModal');
+const pageMode=modal?.dataset.gamePage==='true';
 const playerBoardEl=document.getElementById('playerBoard');
 const botBoardEl=document.getElementById('botBoard');
 const statusEl=document.getElementById('ticataStatus');
@@ -772,7 +773,7 @@ function chooseReroll(which){
 
 document.addEventListener('click',e=>{
   if(e.target.closest('[data-game-open]')){syncMobileGameLayout();modal.classList.add('open');renderStats();newMatch();return;}
-  if(e.target.closest('[data-game-close]')){clearMatchTimers();modal.classList.remove('open');return;}
+  if(e.target.closest('[data-game-close]')){clearMatchTimers();if(pageMode){location.href='../../';}else{modal.classList.remove('open');}return;}
   if(e.target.closest('[data-game-reset]')){newMatch();return;}
   if(e.target.closest('[data-game-next]')){newMatch();return;}
   if(e.target.closest('[data-game-roll]')){playerRoll();return;}
@@ -787,3 +788,8 @@ document.addEventListener('click',e=>{
 });
 renderStats();
 render();
+if(pageMode){
+  syncMobileGameLayout();
+  modal.classList.add('open');
+  newMatch();
+}
