@@ -159,7 +159,7 @@ function place(side,targetSide,line){
     statusEl.textContent=`알까기! ${removed}개 제거`;
     hintEl.textContent='보너스 실드를 내 보드 또는 상대 보드에 배치하세요.';
     render();
-    if(side==='bot')setTimeout(botPlaceShield,280);
+    if(side==='bot')setTimeout(botPlaceShield,900);
     return true;
   }
   state.current=null;
@@ -263,22 +263,25 @@ function doReroll(){
   if(state.turn!=='player'||!state.current||!state.reroll.player||state.current.bonus||state.over||dieAnimating)return;
   state.reroll.player=false;
   state.alt=roll();
-  const ghost={...state.current,value:state.alt};
-  visualDie=null;
-  animateDie(ghost);
+  dieAnimating=true;
+  rerollBtn.hidden=true;
+  rerollChoice.hidden=true;
+  currentDieEl.className=`dice-cube rolling ${state.current.shield?'shield':''}`;
+  hintEl.textContent='리롤 중...';
   setTimeout(()=>{
-    visualDie=state.current;
     currentDieEl.className=`dice-cube face-${state.alt} ${state.current.shield?'shield':''} landed`;
+    dieAnimating=false;
+    rerollChoice.innerHTML=`<span>리롤 결과</span><button class="btn small" data-game-pick="old">기존 ${state.current.value}</button><button class="btn small primary" data-game-pick="new">새 ${state.alt}</button>`;
     rerollChoice.hidden=false;
-  },740);
-  render();
-  hintEl.textContent='기존 눈과 새 눈 중 하나를 선택하세요.';
+    hintEl.textContent='기존 눈과 새 눈 중 하나를 선택하세요.';
+  },720);
 }
 function chooseReroll(which){
-  if(state.alt===null)return;
+  if(state.alt===null||dieAnimating)return;
   if(which==='new')state.current.value=state.alt;
   state.alt=null;
-  visualDie=null;
+  visualDie=state.current;
+  currentDieEl.className=`dice-cube face-${state.current.value} ${state.current.shield?'shield':''} landed`;
   render();
   hintEl.textContent=state.current.shield?'실드 주사위를 배치하세요.':'내 보드의 원하는 줄을 선택하세요.';
 }
