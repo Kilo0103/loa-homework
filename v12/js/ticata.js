@@ -23,12 +23,33 @@ const matchOverlay=document.getElementById('matchOverlay');
 const matchOverlayTitle=document.getElementById('matchOverlayTitle');
 const matchOverlaySub=document.getElementById('matchOverlaySub');
 
-const DIFFICULTIES=[
-  {id:'easy',label:'쉬움',tag:'초보'},
-  {id:'normal',label:'보통',tag:'일반'},
-  {id:'hard',label:'어려움',tag:'숙련'}
+const CARD_OPPONENTS=[
+  {name:'키에사',grade:'일반',ai:'normal-card'},
+  {name:'투란',grade:'일반',ai:'normal-card'},
+  {name:'킬리언',grade:'고급',ai:'uncommon-card'},
+  {name:'호동',grade:'고급',ai:'uncommon-card'},
+  {name:'아그리스',grade:'고급',ai:'uncommon-card'},
+  {name:'칼라도세',grade:'희귀',ai:'rare-card'},
+  {name:'혼재의 추오',grade:'희귀',ai:'rare-card'},
+  {name:'타르실라',grade:'희귀',ai:'rare-card'},
+  {name:'시그나투스',grade:'희귀',ai:'rare-card'},
+  {name:'자크라',grade:'희귀',ai:'rare-card'},
+  {name:'아르카디아',grade:'영웅',ai:'epic-card'},
+  {name:'아슈타로테',grade:'영웅',ai:'epic-card'},
+  {name:'라우리엘',grade:'영웅',ai:'epic-card'},
+  {name:'모르페',grade:'영웅',ai:'epic-card'},
+  {name:'실리안',grade:'전설',ai:'legendary-card'},
+  {name:'니나브',grade:'전설',ai:'legendary-card'},
+  {name:'아만',grade:'전설',ai:'legendary-card'},
+  {name:'웨이',grade:'전설',ai:'legendary-card'},
+  {name:'카단',grade:'전설',ai:'legendary-card'},
+  {name:'카마인',grade:'전설',ai:'legendary-card'},
+  {name:'카멘',grade:'전설',ai:'legendary-card'},
+  {name:'샨디',grade:'전설',ai:'legendary-card'},
+  {name:'베아트리스',grade:'전설',ai:'legendary-card'}
 ];
-const OPPONENTS=['주사위콩','모코코77','타짜봇','알까기장인','세줄수호자','골든다이스','티카봇'];
+const GRADE_ORDER={일반:0,고급:1,희귀:2,영웅:3,전설:4};
+const GRADE_CLASS={일반:'normal',고급:'uncommon',희귀:'rare',영웅:'epic',전설:'legendary'};
 
 let dieAnimating=false;
 let lastFlick=null;
@@ -43,7 +64,8 @@ const state={
   pendingType:'normal',
   opening:true,
   reroll:{player:true,bot:true},
-  difficulty:'normal',
+  difficulty:'rare-card',
+  opponentGrade:'희귀',
   opponentName:'BOT',
   alt:null,
   over:false,
@@ -180,22 +202,22 @@ function newMatch(){
   hintEl.textContent='티카투카 매칭을 검색하고 있습니다.';
   opponentNameEl.textContent='상대 찾는 중';
   opponentLevelEl.textContent='MATCHMAKING';
-  matchBadge.classList.remove('found');
+  matchBadge.className='match-badge';
   playerDiceCube.className='dice-cube face-1 idle';
   botDiceCube.className='dice-cube face-1 idle';
   render();
   showMatchOverlay('상대 찾는 중...','잠시만 기다려 주세요.');
   const wait=700+Math.floor(Math.random()*650);
   matchTimer=setTimeout(()=>{
-    const diff=DIFFICULTIES[Math.floor(Math.random()*DIFFICULTIES.length)];
-    const name=OPPONENTS[Math.floor(Math.random()*OPPONENTS.length)];
-    state.difficulty=diff.id;
-    state.opponentName=name;
-    opponentNameEl.textContent=name;
-    opponentLevelEl.textContent=`${diff.tag} · 난이도 ${diff.label}`;
-    matchBadge.classList.add('found');
+    const opponent=CARD_OPPONENTS[Math.floor(Math.random()*CARD_OPPONENTS.length)];
+    state.difficulty=opponent.ai;
+    state.opponentGrade=opponent.grade;
+    state.opponentName=opponent.name;
+    opponentNameEl.textContent=opponent.name;
+    opponentLevelEl.textContent=opponent.grade;
+    matchBadge.className=`match-badge found grade-${GRADE_CLASS[opponent.grade]}`;
     statusEl.textContent='MATCH FOUND';
-    showMatchOverlay('MATCH FOUND',`${name} · 난이도 ${diff.label}`,true);
+    showMatchOverlay('MATCH FOUND',`${opponent.name} · ${opponent.grade} 카드`,true);
     matchReadyTimer=setTimeout(()=>{
       hideMatchOverlay();
       startRound();
@@ -341,8 +363,8 @@ function normalPlacementValue(value,line){
   let score=swing*2+comboCount*5+p.removed*11;
   if(p.beforeOwn<=p.beforePlayer&&p.afterOwn>p.afterPlayer)score+=12;
   if(p.beforeOwn>p.beforePlayer&&p.afterOwn>=p.afterPlayer)score+=3;
-  if(state.board.bot[line].length===2&&p.removed===0)score-=state.difficulty==='hard'?5:2;
-  if(p.removed>0&&p.beforePlayer>=12)score+=state.difficulty==='hard'?8:4;
+  if(state.board.bot[line].length===2&&p.removed===0)score-=GRADE_ORDER[state.opponentGrade]>=3?5:2;
+  if(p.removed>0&&p.beforePlayer>=12)score+=GRADE_ORDER[state.opponentGrade]>=3?8:4;
   return score;
 }
 function rankedBotLines(value){
@@ -351,8 +373,20 @@ function rankedBotLines(value){
 function botChooseLine(value){
   const ranked=rankedBotLines(value);
   if(!ranked.length)return -1;
-  if(state.difficulty==='easy')return ranked[Math.floor(Math.random()*ranked.length)].line;
-  if(state.difficulty==='normal'&&ranked.length>1&&Math.random()<0.18)return ranked[1].line;
+  const grade=GRADE_ORDER[state.opponentGrade]??2;
+  if(grade===0)return ranked[Math.floor(Math.random()*ranked.length)].line;
+  if(grade===1){
+    if(ranked.length>1&&Math.random()<0.48)return ranked[1].line;
+    return ranked[0].line;
+  }
+  if(grade===2){
+    if(ranked.length>1&&Math.random()<0.18)return ranked[1].line;
+    return ranked[0].line;
+  }
+  if(grade===3){
+    if(ranked.length>1&&Math.random()<0.06)return ranked[1].line;
+    return ranked[0].line;
+  }
   return ranked[0].line;
 }
 function bestNormalValue(value){
@@ -363,15 +397,18 @@ function botShouldReroll(){
   if(!state.reroll.bot||!state.current||state.current.bonus)return false;
   const currentValue=state.current.value;
   const currentScore=bestNormalValue(currentValue);
-  if(state.difficulty==='easy')return false;
+  const grade=GRADE_ORDER[state.opponentGrade]??2;
+  if(grade<=1)return false;
   const alt=roll();
   const altScore=bestNormalValue(alt);
   let use=false;
-  if(state.difficulty==='normal'){
+  if(grade===2){
     const flick=legalOwnLines('bot').some(i=>state.board.player[i].some(d=>!d.shield&&d.value===currentValue));
     use=!flick&&currentValue<=2&&(alt>=4||altScore>currentScore+4);
+  }else if(grade===3){
+    use=altScore>currentScore+3||(currentValue<=2&&altScore>currentScore);
   }else{
-    use=altScore>currentScore+2||(currentValue<=2&&altScore>=currentScore);
+    use=altScore>currentScore+1||(currentValue<=2&&altScore>=currentScore);
   }
   if(!use)return false;
   state.reroll.bot=false;
@@ -406,9 +443,15 @@ function shieldTargetValue(t,value){
 function botChooseShieldTarget(){
   const targets=legalShieldTargets();
   if(!targets.length)return null;
-  if(state.difficulty==='easy')return targets[Math.floor(Math.random()*targets.length)];
+  const grade=GRADE_ORDER[state.opponentGrade]??2;
+  if(grade===0)return targets[Math.floor(Math.random()*targets.length)];
   const value=state.current.value;
-  if(state.difficulty==='normal'){
+  if(grade===1){
+    const preferred=targets.filter(x=>value<=2?x.side==='player':x.side==='bot');
+    const pool=preferred.length?preferred:targets;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  if(grade===2){
     const preferred=targets.filter(x=>value<=3?x.side==='player':x.side==='bot');
     const pool=preferred.length?preferred:targets;
     return pool.sort((a,b)=>shieldTargetValue(b,value)-shieldTargetValue(a,value))[0];
