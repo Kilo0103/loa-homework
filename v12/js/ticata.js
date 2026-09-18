@@ -24,6 +24,7 @@ const state={
   current:null,
   opening:true,
   reroll:{player:true,bot:true},
+  difficulty:'normal',
   alt:null,
   over:false,
   thinking:false
@@ -62,11 +63,13 @@ function dieHtml(d){
 function renderBoard(side,root){
   root.innerHTML=state.board[side].map((line,i)=>{
     const score=lineScore(line);
+    const rival=lineScore(state.board[other(side)][i]);
+    const lead=score>rival?'ahead':score<rival?'behind':'tied';
     const slots=[...line];
     while(slots.length<3)slots.push(null);
     const can=canPlace(side,i);
     const flicked=lastFlick&&lastFlick.side===side&&lastFlick.line===i;
-    return `<button class="tika-line ${can?'placeable':''} ${flicked?'flicked':''}" data-game-place data-side="${side}" data-line="${i}" ${can?'':'disabled'}>
+    return `<button class="tika-line ${lead} ${can?'placeable':''} ${flicked?'flicked':''}" data-game-place data-side="${side}" data-line="${i}" ${can?'':'disabled'}>
       <span class="line-no">${i+1}줄</span>
       <span class="dice-row">${slots.map(d=>dieHtml(d)).join('')}</span>
       <span class="line-score">${score}</span>
@@ -204,20 +207,107 @@ function legalShieldTargets(){
   for(const side of ['player','bot'])for(let i=0;i<3;i++)if(state.board[side][i].length<3)a.push({side,line:i});
   return a;
 }
+function cloneLine(line){return line.map(d=>({...d}));}
+function previewNormal(line,value){
+  const own=cloneLine(state.board.bot[line]);
+  const player=cloneLine(state.board.player[line]);
+  const beforeOwn=lineScore(own),beforePlayer=lineScore(player);
+  own.push({value,shield:false});
+  const removed=player.filter(d=>!d.shield&&d.value===value).length;
+  const afterPlayer=player.filter(d=>d.shield||d.value!==value);
+  const afterOwnScore=lineScore(own),afterPlayerScore=lineScore(afterPlayer);
+  return {line,removed,beforeOwn,beforePlayer,afterOwn:afterOwnScore,afterPlayer:afterPlayerScore};
+}
+function normalPlacementValue(value,line){
+  const p=previewNormal(line,value);
+  const comboCount=state.board.bot[line].filter(d=>d.value===value).length;
+  const swing=(p.afterOwn-p.beforeOwn)+(p.beforePlayer-p.afterPlayer);
+  let score=swing*2+comboCount*5+p.removed*11;
+  if(p.beforeOwn<=p.beforePlayer&&p.afterOwn>p.afterPlayer)score+=12;
+  if(p.beforeOwn>p.beforePlayer&&p.afterOwn>=p.afterPlayer)score+=3;
+  if(state.board.bot[line].length===2&&p.removed===0)score-=state.difficulty==='hard'?5:2;
+  if(p.removed>0&&p.beforePlayer>=12)score+=state.difficulty==='hard'?8:4;
+  return score;
+}
+function rankedBotLines(value){
+  return legalOwnLines('bot')
+    .map(line=>({line,score:normalPlacementValue(value,line)}))
+    .sort((a,b)=>b.score-a.score||Math.random()-.5);
+}
 function botChooseLine(value){
-  const own=legalOwnLines('bot');
-  const flicks=own.filter(i=>state.board.player[i].some(d=>!d.shield&&d.value===value));
-  const pool=flicks.length?flicks:own;
-  return pool[Math.floor(Math.random()*pool.length)];
+  const ranked=rankedBotLines(value);
+  if(!ranked.length)return -1;
+  if(state.difficulty==='easy')return ranked[Math.floor(Math.random()*ranked.length)].line;
+  if(state.difficulty==='normal'&&ranked.length>1&&Math.random()<0.18)return ranked[1].line;
+  return ranked[0].line;
+}
+function bestNormalValue(value){
+  const ranked=rankedBotLines(value);
+  return ranked.length?ranked[0].score:-999;
+}
+function botShouldReroll(){
+  if(!state.reroll.bot||!state.current||state.current.bonus)return false;
+  const currentValue=state.current.value;
+  const currentScore=bestNormalValue(currentValue);
+  if(state.difficulty==='easy')return false;
+  const alt=roll();
+  const altScore=bestNormalValue(alt);
+  let use=false;
+  if(state.difficulty==='normal'){
+    const flick=legalOwnLines('bot').some(i=>state.board.player[i].some(d=>!d.shield&&d.value===currentValue));
+    use=!flick&&currentValue<=2&&(alt>=4||altScore>currentScore+4);
+  }else{
+    use=altScore>currentScore+2||(currentValue<=2&&altScore>=currentScore);
+  }
+  if(!use)return false;
+  state.reroll.bot=false;
+  const old=currentValue;
+  if(altScore>=currentScore)state.current.value=alt;
+  visualDie=null;
+  statusEl.textContent=`BOT 타짜 · ${old} → ${alt} · ${state.current.value} 선택`;
+  hintEl.textContent='BOT이 리롤 결과를 고르는 중...';
+  render();
+  setTimeout(botTurn,900);
+  return true;
+}
+function shieldTargetValue(t,value){
+  const line=state.board[t.side][t.line];
+  if(t.side==='bot'){
+    const before=lineScore(line);
+    const after=lineScore([...line,{value,shield:true}]);
+    const combo=line.filter(d=>d.value===value).length;
+    const rival=lineScore(state.board.player[t.line]);
+    let score=(after-before)*2+combo*5;
+    if(before<=rival&&after>rival)score+=10;
+    if(line.length===2)score+=2;
+    return score;
+  }
+  const before=lineScore(line);
+  const after=lineScore([...line,{value,shield:true}]);
+  const helpsCombo=line.some(d=>d.value===value);
+  const lock=line.length===2?18:line.length===1?8:3;
+  let score=lock-(after-before)*.8+(value<=3?8:0)-(helpsCombo?14:0);
+  const botScore=lineScore(state.board.bot[t.line]);
+  if(before>botScore&&line.length===2)score+=7;
+  return score;
+}
+function botChooseShieldTarget(){
+  const targets=legalShieldTargets();
+  if(!targets.length)return null;
+  if(state.difficulty==='easy')return targets[Math.floor(Math.random()*targets.length)];
+  const value=state.current.value;
+  if(state.difficulty==='normal'){
+    const preferred=targets.filter(x=>value<=3?x.side==='player':x.side==='bot');
+    const pool=preferred.length?preferred:targets;
+    return pool.sort((a,b)=>shieldTargetValue(b,value)-shieldTargetValue(a,value))[0];
+  }
+  return targets.sort((a,b)=>shieldTargetValue(b,value)-shieldTargetValue(a,value))[0];
 }
 function botPlaceShield(){
-  const targets=legalShieldTargets();
-  if(!targets.length){state.current=null;endTurn();return;}
-  const low=state.current.value<=3;
-  const preferred=targets.filter(x=>low?x.side==='player':x.side==='bot');
-  const pool=preferred.length?preferred:targets;
-  const t=pool[Math.floor(Math.random()*pool.length)];
+  const t=botChooseShieldTarget();
+  if(!t){state.current=null;state.thinking=false;endTurn();return;}
   state.board[t.side][t.line].push({...state.current});
+  statusEl.textContent=t.side==='player'?'BOT 실드 방해':'BOT 실드 강화';
   state.current=null;
   state.thinking=false;
   endTurn();
@@ -226,7 +316,9 @@ function botTurn(){
   if(state.over)return;
   const own=legalOwnLines('bot');
   if(!own.length){state.thinking=false;state.current=null;endTurn();return;}
+  if(botShouldReroll())return;
   const line=botChooseLine(state.current.value);
+  if(line<0){state.thinking=false;state.current=null;endTurn();return;}
   state.board.bot[line].push({...state.current});
   const removed=removeMatches('bot',line,state.current.value);
   if(removed>0){
@@ -291,6 +383,13 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-game-close]')){modal.classList.remove('open');return;}
   if(e.target.closest('[data-game-reset]')){start();return;}
   if(e.target.closest('[data-game-reroll]')){doReroll();return;}
+  const diff=e.target.closest('[data-game-difficulty]');
+  if(diff){
+    state.difficulty=diff.dataset.gameDifficulty;
+    document.querySelectorAll('[data-game-difficulty]').forEach(b=>b.classList.toggle('active',b===diff));
+    start();
+    return;
+  }
   const pick=e.target.closest('[data-game-pick]');
   if(pick){chooseReroll(pick.dataset.gamePick);return;}
   const line=e.target.closest('[data-game-place]');
