@@ -107,7 +107,6 @@ function start(){
   state.over=false;
   state.thinking=false;
   statusEl.textContent='게임 진행 중';
-  setHint='첫 실드 주사위를 내 보드에 배치하세요.';
   hintEl.textContent='첫 실드 주사위를 내 보드에 배치하세요.';
   render();
 }
