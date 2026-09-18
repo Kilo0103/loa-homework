@@ -1,60 +1,134 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090b10"><title>LOA Homework</title><link rel="stylesheet" href="v12/style.css?v=14"><link rel="stylesheet" href="v12/ux.css?v=27"></head><body>
-<div class="app"><header class="topbar"><div class="brand"><div class="logo">LA</div><div><h1>내 숙제</h1><p>The Six는 바로 체크 · Extra는 필요한 것만</p></div></div><div class="top-actions"><button class="btn" data-game-open>🎮 티카투카</button><button class="btn" data-action="open-settings" data-tab="api">↻ 동기화</button><button class="btn primary" data-action="open-add">+ 캐릭터</button><button class="icon-btn" data-action="open-settings" data-tab="general">⚙</button></div></header>
-<div class="board-label"><strong>현황</strong><span>The Six 완료율과 골드, Extra 활성 숙제만 빠르게 봅니다.</span></div>
-<section class="summary"><div class="metric"><span>오늘 · THE SIX</span><div class="metric-line"><strong id="dailyPct">0%</strong><small id="dailyText">0 / 0</small></div><div class="bar"><i id="dailyBar" class="daily"></i></div></div><div class="metric"><span>이번 주 · THE SIX</span><div class="metric-line"><strong id="weeklyPct">0%</strong><small id="weeklyText">0 / 0</small></div><div class="bar"><i id="weeklyBar" class="weekly"></i></div></div><div class="metric gold"><span>주간 골드</span><strong id="goldPotential">0 G</strong><small id="goldEarned">획득 0 G</small><small id="rosterRoleCount">The Six 0/6</small></div><div class="metric extra-metric"><span>EXTRA · 활성만</span><strong id="extraActive">0 / 0</strong><small id="extraText">Extra 0명 · 활성 숙제 0%</small></div></section>
-<section class="toolbar"><div class="filters"><button class="active" data-filter="all">전체</button><button data-filter="six">The Six</button><button data-filter="extra">Extra</button><button data-filter="daily">오늘 남음</button><button data-filter="weekly">주간 남음</button><button data-filter="favorite">★</button></div><input id="search" class="search" placeholder="캐릭터 검색"></section>
-<main id="cards" class="cards"></main><footer><span>일일 06:00 · 주간 수요일 06:00 초기화</span><span><b id="rosterCount">API 원정대 0명</b> · <span id="lastSync">API 동기화 기록 없음</span></span></footer></div>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090b10">
+  <title>LOA Hub</title>
+  <link rel="stylesheet" href="hub/style.css?v=1">
+</head>
+<body>
+  <div class="hub-shell">
+    <header class="hub-header">
+      <a class="hub-brand" href="./" aria-label="LOA Hub 홈">
+        <span class="hub-logo">LA</span>
+        <span><b>LOA HUB</b><small>MY ROSTER DASHBOARD</small></span>
+      </a>
+      <nav class="hub-nav" aria-label="주요 메뉴">
+        <a class="active" href="./">HOME</a>
+        <a href="homework/">숙제</a>
+        <a href="#games">GAMES</a>
+        <a href="#tools">TOOLS</a>
+      </nav>
+      <a class="header-cta" href="homework/">숙제 체크</a>
+    </header>
 
-<div class="modal-bg" id="settingsModal"><div class="modal wide"><div class="modal-head"><h2>설정</h2><button class="icon-btn" data-action="close-modal" data-modal="settingsModal">✕</button></div><div class="settings-layout"><nav class="side-tabs"><button data-settings-tab="general">일반</button><button data-settings-tab="api" class="active">API</button><button data-settings-tab="automation">자동 할당</button><button data-settings-tab="data">데이터</button></nav><div class="modal-body">
-<section class="settings-panel" data-panel="general" hidden><h3>일반</h3><div class="setting-box"><strong>The Six / Extra</strong><p>The Six는 최대 6명이며 모든 활성 숙제를 완료 대상으로 봅니다. Extra는 직접 활성화한 숙제만 현황에 포함합니다.</p></div><div class="setting-box"><strong>체크 초기화</strong><p>숙제 구성은 유지하고 완료 상태만 초기화합니다.</p><div class="inline"><button class="btn small" data-action="reset-daily">일일 초기화</button><button class="btn small" data-action="reset-weekly">주간 초기화</button></div></div></section>
-<section class="settings-panel" data-panel="api"><h3>로스트아크 API</h3><p class="desc">API는 캐릭터 정보를 갱신하고 숙제 구성은 유지합니다.</p><div class="field"><label>원정대 조회 캐릭터</label><input id="apiCharacter" class="input"></div><div class="field"><label>API Key</label><input id="apiKey" type="password" class="input"></div><label class="checkline"><input id="rememberKey" type="checkbox"> 이 브라우저에 API Key 저장</label><div class="inline"><button id="syncNow" class="btn primary" data-action="sync">지금 동기화</button></div><div id="syncMessage"></div></section>
-<section class="settings-panel" data-panel="automation" hidden><h3>The Six 자동 할당</h3><label class="switch-row"><span><strong>새 The Six 자동 구성</strong><small>앞의 6캐릭에만 레벨 기준 숙제를 자동 구성합니다.</small></span><input id="autoAssign" type="checkbox"></label><label class="switch-row"><span><strong>일일 숙제 추천</strong><small>아이템 레벨에 맞는 혼돈 계열과 가디언 계열을 구성합니다.</small></span><input id="autoDaily" type="checkbox"></label><label class="switch-row"><span><strong>주간 레이드 추천</strong><small>입장 가능한 레이드 중 기본 추천 세트를 구성합니다.</small></span><input id="autoWeekly" type="checkbox"></label><div class="field compact"><label>추천 레이드 수</label><input id="recommendCount" type="number" min="1" max="5" class="input" value="3"></div><div class="notice">Extra는 추천만 보여주고, 사용자가 활성화한 항목만 체크 숙제가 됩니다.</div></section>
-<section class="settings-panel" data-panel="data" hidden><h3>데이터</h3><div class="setting-box"><strong>백업 / 복원</strong><div class="inline"><button class="btn small" data-action="export">백업 내보내기</button><button class="btn small" data-action="import">백업 불러오기</button><input id="importFile" type="file" accept="application/json" hidden></div></div><div class="setting-box danger-box"><strong>전체 초기화</strong><p>캐릭터, 숙제, 체크 상태와 저장된 API Key를 삭제합니다.</p><button class="btn danger small" data-action="reset-all">전체 초기화</button></div></section>
-</div></div><div class="modal-foot"><button class="btn primary" data-action="save-settings">설정 저장</button></div></div></div>
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">ROSTER STATUS</span>
+          <h1>오늘, 뭐 남았지?</h1>
+          <p id="heroMessage">원정대 숙제 현황을 불러오는 중입니다.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="homework/">숙제 체크하러 가기</a>
+            <a class="btn" href="#games">게임 보기</a>
+          </div>
+        </div>
+        <div class="hero-orbit" aria-hidden="true">
+          <span class="orbit-ring ring-a"></span>
+          <span class="orbit-ring ring-b"></span>
+          <strong id="overallPct">0%</strong>
+          <small>THE SIX</small>
+        </div>
+      </section>
 
-<div class="modal-bg" id="addModal"><div class="modal"><div class="modal-head"><h2>캐릭터 추가</h2><button class="icon-btn" data-action="close-modal" data-modal="addModal">✕</button></div><div class="modal-body"><p class="desc">The Six가 6명 미만이면 먼저 추가되는 캐릭터부터 The Six, 이후는 Extra로 등록됩니다.</p><div class="search-line"><input id="candidateSearch" class="input" placeholder="원정대 캐릭터 검색"><button class="btn small" data-action="select-all">전체 선택</button></div><div id="candidateList" class="candidate-list"></div></div><div class="modal-foot"><span id="selectedCount" class="muted push">0명 선택</span><button class="btn primary" data-action="confirm-add">선택 추가</button></div></div></div>
+      <section class="metrics" aria-label="숙제 요약">
+        <article class="metric-card daily">
+          <div class="metric-head"><span>오늘 · THE SIX</span><em id="dailyText">0 / 0</em></div>
+          <strong id="dailyPct">0%</strong>
+          <div class="progress"><i id="dailyBar"></i></div>
+          <small id="dailySub">남은 일일 숙제 없음</small>
+        </article>
+        <article class="metric-card weekly">
+          <div class="metric-head"><span>이번 주 · THE SIX</span><em id="weeklyText">0 / 0</em></div>
+          <strong id="weeklyPct">0%</strong>
+          <div class="progress"><i id="weeklyBar"></i></div>
+          <small id="weeklySub">남은 주간 숙제 없음</small>
+        </article>
+        <article class="metric-card gold">
+          <div class="metric-head"><span>주간 골드</span><em id="goldRate">0%</em></div>
+          <strong id="goldRemaining">0 G</strong>
+          <small id="goldDetail">획득 0 G / 전체 0 G</small>
+        </article>
+        <article class="metric-card roster">
+          <div class="metric-head"><span>남은 캐릭터</span><em id="sixCount">0 / 6</em></div>
+          <strong id="remainingChars">0</strong>
+          <small id="rosterDetail">등록 캐릭터 0명</small>
+        </article>
+      </section>
 
-<div class="modal-bg" id="characterModal"><div class="modal wide"><div class="modal-head"><h2 id="editCharTitle">숙제 설정</h2><button class="icon-btn" data-action="close-modal" data-modal="characterModal">✕</button></div><div class="modal-body"><input id="editCharKey" type="hidden"><div class="tabs"><button class="active" data-edit-tab="daily">일일 숙제</button><button data-edit-tab="weekly">주간 / 레이드</button></div><section id="dailyEditorWrap"><p class="desc">횟수와 휴게를 직접 관리합니다.</p><div id="dailyEditor" class="editor"></div><button class="btn small" data-action="add-daily">+ 일일 숙제</button></section><section id="weeklyEditorWrap" hidden><p class="desc">레이드와 난이도를 선택하거나 일반 주간 숙제를 추가할 수 있습니다.</p><div id="weeklyEditor" class="editor"></div><div class="inline"><button class="btn small" data-action="add-raid">+ 레이드 선택</button><button class="btn small" data-action="add-custom-weekly">+ 일반 주간 숙제</button></div></section></div><div class="modal-foot"><button class="btn danger push" data-action="remove-character">숙제판에서 제거</button><button class="btn primary" data-action="save-character">저장</button></div></div></div>
-<div class="modal-bg" id="ticataModal"><div class="modal game-modal"><div class="modal-head"><div><h2>티카투카 · BOT</h2><small class="game-rule-note">3줄 중 2줄을 이기면 승리</small></div><button class="icon-btn" data-game-close>✕</button></div><div class="modal-body ticata-wrap">
-<div class="ticata-topline"><div><strong id="ticataStatus">매칭 대기</strong><span id="ticataStats">승 0 · 무 0 · 패 0</span></div><div class="ticata-top-actions"><div id="matchBadge" class="match-badge"><span class="match-dot"></span><div><b id="opponentName">상대 찾는 중</b><small id="opponentLevel">MATCHMAKING</small></div></div><button class="btn small" data-game-reset>다시 매칭</button></div></div>
-<div class="ticata-arena">
-<section class="tika-side player-side">
-  <div class="tika-side-head"><div class="side-name"><b>ME</b><small id="playerOrderBadge" class="turn-order-badge first">선공</small></div><span id="playerTotal">0점</span></div>
-  <div id="playerDicePanel" class="dice-owner-panel player side-dice-panel"><span class="dice-owner-title">내 주사위</span><div class="dice-stage"><div id="playerDiceCube" class="dice-cube face-1 idle"><span class="die-face f1">1</span><span class="die-face f2">2</span><span class="die-face f3">3</span><span class="die-face f4">4</span><span class="die-face f5">5</span><span class="die-face f6">6</span></div></div><small id="playerDieType">대기</small></div>
-  <div class="side-board-label"><span>내 필드</span><small>주사위를 배치할 줄을 선택</small></div>
-  <div id="playerBoard" class="tika-board"></div>
-</section>
-<div class="tika-center">
-  <div class="versus-mark"><span>ME</span><b>VS</b><span>BOT</span></div>
-  <button id="rollBtn" class="btn primary roll-btn" data-game-roll>주사위 굴리기</button>
-  <button id="rerollBtn" class="btn small" data-game-reroll hidden>타짜의 손놀림 · 1회</button>
-  <div id="rerollChoice" class="reroll-choice" hidden></div>
-  <div id="gameHint" class="game-hint">매칭을 기다리는 중...</div>
-</div>
-<section class="tika-side bot-side">
-  <div class="tika-side-head"><div class="side-name"><b>BOT</b><small id="botOrderBadge" class="turn-order-badge second">후공</small></div><span id="botTotal">0점</span></div>
-  <div id="botDicePanel" class="dice-owner-panel bot side-dice-panel"><span class="dice-owner-title">상대 주사위</span><div class="dice-stage"><div id="botDiceCube" class="dice-cube face-1 idle"><span class="die-face f1">1</span><span class="die-face f2">2</span><span class="die-face f3">3</span><span class="die-face f4">4</span><span class="die-face f5">5</span><span class="die-face f6">6</span></div></div><small id="botDieType">대기</small></div>
-  <div class="side-board-label"><span>상대 필드</span><small>상대가 선택한 줄</small></div>
-  <div id="botBoard" class="tika-board"></div>
-</section>
-</div>
-<div class="ticata-legend"><span><i class="legend-die player"></i> 내 주사위</span><span><i class="legend-die enemy"></i> 상대 주사위</span><span><i class="legend-die shield"></i> 실드</span><span>알까기 성공 → 보너스 실드</span></div><div id="matchOverlay" class="match-overlay"><div class="match-spinner"></div><strong id="matchOverlayTitle">상대 찾는 중...</strong><span id="matchOverlaySub">티카투카 매칭을 검색하고 있습니다.</span></div>
-<div id="resultOverlay" class="result-overlay">
-  <div id="resultCard" class="result-card">
-    <span class="result-kicker">MATCH RESULT</span>
-    <strong id="resultTitle">승리</strong>
-    <span id="resultReason" class="result-reason">2 : 1 필드 승리</span>
-    <span id="resultOpponent" class="result-opponent">상대 · 등급</span>
-    <div id="resultFields" class="result-fields"></div>
-    <div id="resultTiebreak" class="result-tiebreak" hidden>
-      <span>총점 판정</span>
-      <b id="resultTotalScore">0 : 0</b>
-    </div>
-    <div class="result-actions">
-      <button class="btn primary result-next" data-game-next>다음 상대 찾기</button>
-      <button class="btn" data-game-close>닫기</button>
-    </div>
+      <section class="dashboard-grid">
+        <article class="panel roster-panel">
+          <div class="section-title">
+            <div><span class="eyebrow">THE SIX</span><h2>내 캐릭터 현황</h2></div>
+            <a href="homework/">전체 관리 →</a>
+          </div>
+          <div id="sixRoster" class="six-roster"></div>
+        </article>
+
+        <aside class="panel quick-panel">
+          <div class="section-title">
+            <div><span class="eyebrow">QUICK STATUS</span><h2>원정대 요약</h2></div>
+          </div>
+          <div class="quick-list">
+            <div><span>Extra 캐릭터</span><b id="extraCount">0명</b></div>
+            <div><span>Extra 활성 숙제</span><b id="extraProgress">0%</b></div>
+            <div><span>API 원정대</span><b id="apiCount">0명</b></div>
+            <div><span>마지막 동기화</span><b id="lastSync">없음</b></div>
+          </div>
+          <a class="wide-link" href="homework/">숙제 상세 화면 열기 <span>→</span></a>
+        </aside>
+      </section>
+
+      <section id="games" class="content-section">
+        <div class="section-title big">
+          <div><span class="eyebrow">GAMES</span><h2>미니게임</h2><p>숙제 끝났으면 한 판.</p></div>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card ticata">
+            <div class="feature-mark">T</div>
+            <div class="feature-copy"><span>PLAYABLE</span><h3>티카투카</h3><p>3개의 필드를 두고 주사위로 겨루는 빠른 BOT 대전.</p></div>
+            <a href="homework/" class="feature-action">현재 버전 플레이 <span>→</span></a>
+          </article>
+          <article class="feature-card cardbattle">
+            <div class="feature-mark">C</div>
+            <div class="feature-copy"><span>IN DEVELOPMENT</span><h3>카드 배틀</h3><p>로스트아크 카드로 덱을 만들고 원정을 진행하는 덱빌딩 로그라이크.</p></div>
+            <div class="feature-action disabled">Coming Soon</div>
+          </article>
+          <article class="feature-card add">
+            <div class="feature-mark">+</div>
+            <div class="feature-copy"><span>EXPANDABLE</span><h3>다음 미니게임</h3><p>새 게임이 생기면 이 허브에 계속 추가됩니다.</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="tools" class="content-section">
+        <div class="section-title big">
+          <div><span class="eyebrow">TOOLS</span><h2>도구</h2><p>계산과 준비를 더 빠르게.</p></div>
+        </div>
+        <div class="tool-grid">
+          <article><b>골드 계산기</b><span>예정</span><p>레이드와 캐릭터별 주간 골드를 빠르게 계산.</p></article>
+          <article><b>레이드 준비 체크</b><span>예정</span><p>캐릭터별 준비 상태를 한눈에 확인.</p></article>
+          <article><b>더 추가할 수 있음</b><span>OPEN</span><p>필요한 기능을 이 영역에 독립 도구로 확장.</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="hub-footer">
+      <span>LOA HUB</span>
+      <span id="cycleInfo">일일 06:00 · 주간 수요일 06:00 초기화</span>
+    </footer>
   </div>
-</div>
-</div></div></div>
-<div id="toast" class="toast"></div><script type="module" src="v12/js/app.js?v=15"></script><script type="module" src="v12/js/ux.js?v=15"></script><script type="module" src="v12/js/ticata.js?v=30"></script></body></html>
+  <script type="module" src="hub/app.js?v=1"></script>
+</body>
+</html>
