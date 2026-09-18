@@ -30,6 +30,8 @@ const resultOpponent=document.getElementById('resultOpponent');
 const resultFields=document.getElementById('resultFields');
 const resultTiebreak=document.getElementById('resultTiebreak');
 const resultTotalScore=document.getElementById('resultTotalScore');
+const playerOrderBadge=document.getElementById('playerOrderBadge');
+const botOrderBadge=document.getElementById('botOrderBadge');
 const mobileWidthQuery=window.matchMedia('(max-width: 820px)');
 const coarsePointerQuery=window.matchMedia('(pointer: coarse)');
 
@@ -127,6 +129,7 @@ const state={
   difficulty:'rare-card',
   opponentGrade:'희귀',
   opponentName:'BOT',
+  firstPlayer:'player',
   alt:null,
   over:false,
   thinking:false
@@ -251,11 +254,21 @@ function renderControls(){
   rerollBtn.hidden=!(myTurn&&state.phase==='place'&&state.current&&!state.current.bonus&&state.reroll.player&&!dieAnimating);
   rerollChoice.hidden=state.alt===null;
 }
+function renderOrderBadges(){
+  const playerFirst=state.firstPlayer==='player';
+  playerOrderBadge.textContent=playerFirst?'선공':'후공';
+  botOrderBadge.textContent=playerFirst?'후공':'선공';
+  playerOrderBadge.classList.toggle('first',playerFirst);
+  playerOrderBadge.classList.toggle('second',!playerFirst);
+  botOrderBadge.classList.toggle('first',!playerFirst);
+  botOrderBadge.classList.toggle('second',playerFirst);
+}
 function render(){
   renderBoard('player',playerBoardEl);
   renderBoard('bot',botBoardEl);
   playerTotalEl.textContent=`${totalScore('player')}점`;
   botTotalEl.textContent=`${totalScore('bot')}점`;
+  renderOrderBadges();
   renderControls();
 }
 function showMatchOverlay(title,sub,matched=false){
@@ -322,11 +335,13 @@ function newMatch(){
     state.difficulty=opponent.ai;
     state.opponentGrade=opponent.grade;
     state.opponentName=opponent.name;
+    state.firstPlayer=Math.random()<0.5?'player':'bot';
     opponentNameEl.textContent=opponent.name;
     opponentLevelEl.textContent=opponent.grade;
     matchBadge.className=`match-badge found grade-${GRADE_CLASS[opponent.grade]}`;
+    const orderText=state.firstPlayer==='player'?'ME 선공 · BOT 후공':'BOT 선공 · ME 후공';
     statusEl.textContent='MATCH FOUND';
-    showMatchOverlay('MATCH FOUND',`${opponent.name} · ${opponent.grade} 카드`,true);
+    showMatchOverlay('MATCH FOUND',`${opponent.name} · ${opponent.grade} 카드 · ${orderText}`,true);
     matchReadyTimer=setTimeout(()=>{
       hideMatchOverlay();
       startRound();
@@ -335,18 +350,27 @@ function newMatch(){
 }
 function startRound(){
   state.board={player:[[],[],[]],bot:[[],[],[]]};
-  state.turn='player';
-  state.phase='await-roll';
+  state.turn=state.firstPlayer;
   state.pendingType='opening-shield';
   state.current=null;
   state.opening=true;
   state.reroll={player:true,bot:true};
   state.alt=null;
   state.over=false;
-  state.thinking=false;
-  statusEl.textContent='내 차례';
-  hintEl.textContent='먼저 첫 실드 주사위를 굴리세요.';
-  render();
+  state.thinking=state.turn==='bot';
+
+  if(state.turn==='player'){
+    state.phase='await-roll';
+    statusEl.textContent='내 선공';
+    hintEl.textContent='첫 실드 주사위를 굴리세요.';
+    render();
+  }else{
+    state.phase='bot-wait';
+    statusEl.textContent=`${state.opponentName} 선공`;
+    hintEl.textContent='상대가 첫 실드 주사위를 굴립니다.';
+    render();
+    setTimeout(botRoll,500);
+  }
 }
 function createDie(type){
   return {
@@ -463,7 +487,8 @@ function endTurn(){
 function legalOwnLines(side){return [0,1,2].filter(i=>state.board[side][i].length<3);}
 function legalShieldTargets(){
   const a=[];
-  for(const side of ['player','bot'])for(let i=0;i<3;i++)if(state.board[side][i].length<3)a.push({side,line:i});
+  const sides=state.current?.opening?[state.turn]:['player','bot'];
+  for(const side of sides)for(let i=0;i<3;i++)if(state.board[side][i].length<3)a.push({side,line:i});
   return a;
 }
 function cloneLine(line){return line.map(d=>({...d}));}
@@ -645,8 +670,12 @@ function botChooseShieldTarget(){
 function botPlaceShield(){
   const t=botChooseShieldTarget();
   if(!t){state.current=null;state.thinking=false;endTurn();return;}
+  const wasOpening=!!state.current?.opening;
   state.board[t.side][t.line].push({...state.current});
-  statusEl.textContent=t.side==='player'?`${state.opponentName} 실드 방해`:`${state.opponentName} 실드 강화`;
+  if(wasOpening)state.opening=false;
+  statusEl.textContent=wasOpening
+    ?`${state.opponentName} 첫 실드 배치`
+    :t.side==='player'?`${state.opponentName} 실드 방해`:`${state.opponentName} 실드 강화`;
   state.current=null;
   state.thinking=false;
   endTurn();
@@ -658,7 +687,7 @@ function botRoll(){
   hintEl.textContent='상대 주사위가 굴러갑니다.';
   renderControls();
   animateDie('bot',state.current,()=>{
-    if(state.current?.bonus){
+    if(state.current?.shield){
       state.phase='bot-place';
       setTimeout(botPlaceShield,260);
     }else{
