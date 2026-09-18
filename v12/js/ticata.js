@@ -324,8 +324,8 @@ function newMatch(){
   opponentNameEl.textContent='상대 찾는 중';
   opponentLevelEl.textContent='MATCHMAKING';
   matchBadge.className='match-badge';
-  playerDiceCube.className='dice-cube face-1 idle';
-  botDiceCube.className='dice-cube face-1 idle';
+  clearDieVisual('player');
+  clearDieVisual('bot');
   render();
   showMatchOverlay('상대 찾는 중...','잠시만 기다려 주세요.');
   const wait=700+Math.floor(Math.random()*650);
@@ -409,11 +409,20 @@ function resolveFlick(attacker,line,value){
   setTimeout(()=>{lastFlick=null;render();},420);
   return {targetRemoved,attackerRemoved};
 }
-function clearSpentDie(side){
+function clearDieVisual(side){
   const cube=side==='player'?playerDiceCube:botDiceCube;
   const label=side==='player'?playerDieType:botDieType;
-  cube.className='dice-cube face-1 idle spent';
-  label.textContent='사용됨';
+  cube.className='dice-cube cleared';
+  label.textContent='대기';
+}
+function clearPlacementUi(side){
+  clearDieVisual(side);
+  if(side==='player'){
+    state.alt=null;
+    rerollChoice.hidden=true;
+    rerollChoice.innerHTML='';
+    rerollBtn.hidden=true;
+  }
 }
 function place(side,targetSide,line){
   if(state.board[targetSide][line].length>=3)return false;
@@ -422,16 +431,15 @@ function place(side,targetSide,line){
   if(d.shield){
     if(d.opening)state.opening=false;
     state.current=null;
-    state.alt=null;
+    clearPlacementUi(side);
     endTurn();
     return true;
   }
   const flick=resolveFlick(side,line,d.value);
   if(flick.targetRemoved>0){
     state.current=null;
-    state.alt=null;
+    clearPlacementUi(side);
     state.pendingType='bonus-shield';
-    clearSpentDie(side);
     if(side==='player'){
       state.phase='await-roll';
       statusEl.textContent=`알까기! 상대 ${flick.targetRemoved} · 내 ${flick.attackerRemoved} 제거`;
@@ -447,7 +455,7 @@ function place(side,targetSide,line){
     return true;
   }
   state.current=null;
-  state.alt=null;
+  clearPlacementUi(side);
   endTurn();
   return true;
 }
@@ -674,6 +682,7 @@ function botPlaceShield(){
   const wasOpening=!!state.current?.opening;
   state.board[t.side][t.line].push({...state.current});
   if(wasOpening)state.opening=false;
+  clearPlacementUi('bot');
   statusEl.textContent=wasOpening
     ?`${state.opponentName} 첫 실드 배치`
     :t.side==='player'?`${state.opponentName} 실드 방해`:`${state.opponentName} 실드 강화`;
@@ -704,10 +713,10 @@ function botAct(){
   if(line<0){state.current=null;state.thinking=false;endTurn();return;}
   state.board.bot[line].push({...state.current});
   const flick=resolveFlick('bot',line,state.current.value);
+  clearPlacementUi('bot');
   if(flick.targetRemoved>0){
     state.current=null;
     state.pendingType='bonus-shield';
-    clearSpentDie('bot');
     state.phase='bot-wait';
     statusEl.textContent=`${state.opponentName} 알까기 · 상대 ${flick.targetRemoved} · 자기 ${flick.attackerRemoved} 제거`;
     hintEl.textContent='상대가 보너스 실드 주사위를 굴립니다.';
