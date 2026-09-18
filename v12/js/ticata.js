@@ -282,16 +282,26 @@ function playerRoll(){
     render();
   });
 }
-function removeMatches(attacker,line,value){
+function resolveFlick(attacker,line,value){
   const target=other(attacker);
-  const before=state.board[target][line].length;
+  const targetBefore=state.board[target][line].length;
+  const attackerBefore=state.board[attacker][line].length;
   state.board[target][line]=state.board[target][line].filter(d=>d.shield||d.value!==value);
-  const removed=before-state.board[target][line].length;
-  if(removed>0){
-    lastFlick={side:target,attacker,line};
-    setTimeout(()=>{lastFlick=null;render();},420);
-  }
-  return removed;
+  const targetRemoved=targetBefore-state.board[target][line].length;
+  if(targetRemoved<=0)return {targetRemoved:0,attackerRemoved:0};
+
+  state.board[attacker][line]=state.board[attacker][line].filter(d=>d.shield||d.value!==value);
+  const attackerRemoved=attackerBefore-state.board[attacker][line].length;
+
+  lastFlick={side:target,attacker,line};
+  setTimeout(()=>{lastFlick=null;render();},420);
+  return {targetRemoved,attackerRemoved};
+}
+function clearSpentDie(side){
+  const cube=side==='player'?playerDiceCube:botDiceCube;
+  const label=side==='player'?playerDieType:botDieType;
+  cube.className='dice-cube face-1 idle spent';
+  label.textContent='사용됨';
 }
 function place(side,targetSide,line){
   if(state.board[targetSide][line].length>=3)return false;
@@ -304,20 +314,20 @@ function place(side,targetSide,line){
     endTurn();
     return true;
   }
-  const removed=removeMatches(side,line,d.value);
-  if(removed>0){
-    state.board[side][line].pop();
+  const flick=resolveFlick(side,line,d.value);
+  if(flick.targetRemoved>0){
     state.current=null;
     state.alt=null;
     state.pendingType='bonus-shield';
+    clearSpentDie(side);
     if(side==='player'){
       state.phase='await-roll';
-      statusEl.textContent=`알까기! ${removed}개 제거`;
+      statusEl.textContent=`알까기! 상대 ${flick.targetRemoved} · 내 ${flick.attackerRemoved} 제거`;
       hintEl.textContent='보너스 실드 주사위를 직접 굴리세요.';
       render();
     }else{
       state.phase='bot-wait';
-      statusEl.textContent=`${state.opponentName} 알까기 · ${removed}개 제거`;
+      statusEl.textContent=`${state.opponentName} 알까기 · 상대 ${flick.targetRemoved} · 자기 ${flick.attackerRemoved} 제거`;
       hintEl.textContent='상대가 보너스 실드 주사위를 굴립니다.';
       render();
       setTimeout(botRoll,500);
@@ -376,8 +386,12 @@ function previewNormal(line,value){
   const beforeOwn=lineScore(own),beforePlayer=lineScore(player);
   own.push({value,shield:false});
   const removed=player.filter(d=>!d.shield&&d.value===value).length;
-  const afterPlayer=player.filter(d=>d.shield||d.value!==value);
-  return {line,removed,beforeOwn,beforePlayer,afterOwn:lineScore(own),afterPlayer:lineScore(afterPlayer)};
+  if(removed>0){
+    const afterOwn=own.filter(d=>d.shield||d.value!==value);
+    const afterPlayer=player.filter(d=>d.shield||d.value!==value);
+    return {line,removed,beforeOwn,beforePlayer,afterOwn:lineScore(afterOwn),afterPlayer:lineScore(afterPlayer)};
+  }
+  return {line,removed:0,beforeOwn,beforePlayer,afterOwn:lineScore(own),afterPlayer:beforePlayer};
 }
 function normalPlacementValue(value,line){
   const p=previewNormal(line,value);
@@ -512,13 +526,13 @@ function botAct(){
   const line=botChooseLine(state.current.value);
   if(line<0){state.current=null;state.thinking=false;endTurn();return;}
   state.board.bot[line].push({...state.current});
-  const removed=removeMatches('bot',line,state.current.value);
-  if(removed>0){
-    state.board.bot[line].pop();
+  const flick=resolveFlick('bot',line,state.current.value);
+  if(flick.targetRemoved>0){
     state.current=null;
     state.pendingType='bonus-shield';
+    clearSpentDie('bot');
     state.phase='bot-wait';
-    statusEl.textContent=`${state.opponentName} 알까기 · ${removed}개 제거`;
+    statusEl.textContent=`${state.opponentName} 알까기 · 상대 ${flick.targetRemoved} · 자기 ${flick.attackerRemoved} 제거`;
     hintEl.textContent='상대가 보너스 실드 주사위를 굴립니다.';
     render();
     setTimeout(botRoll,500);
