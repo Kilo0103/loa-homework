@@ -282,6 +282,10 @@ body.ticata-page{overflow:hidden}
   .ticata-page #ticataModal .player-side .tika-board{order:4}
 
   .ticata-page #ticataModal .side-board-label small{display:none}
+  .ticata-page #ticataModal .tika-board{
+    height:100%;
+    grid-template-rows:repeat(3,minmax(0,1fr));
+  }
   .ticata-page #ticataModal .side-dice-panel{
     height:54px;
     min-height:0;
