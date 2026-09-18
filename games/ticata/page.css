@@ -96,19 +96,19 @@ body.ticata-page{overflow:hidden}
 .ticata-page #ticataModal .tika-side{
   min-width:0;
   min-height:0;
-  height:100%;
+  height:auto;
+  max-height:100%;
+  align-self:center;
   overflow:hidden;
   padding:10px;
   border-radius:14px;
   display:grid;
   gap:6px;
-  align-content:stretch;
+  align-content:center;
 }
-.ticata-page #ticataModal .player-side{
-  grid-template-rows:auto clamp(68px,14vh,92px) auto minmax(0,1fr);
-}
+.ticata-page #ticataModal .player-side,
 .ticata-page #ticataModal .bot-side{
-  grid-template-rows:auto clamp(68px,14vh,92px) auto minmax(0,1fr);
+  grid-template-rows:auto clamp(68px,12vh,92px) auto auto;
 }
 .ticata-page #ticataModal .tika-side-head{margin:0;min-height:20px}
 .ticata-page #ticataModal .side-board-label{min-height:13px;align-items:center}
@@ -134,9 +134,9 @@ body.ticata-page{overflow:hidden}
 .ticata-page #ticataModal .tika-board{
   min-width:0;
   min-height:0;
-  height:100%;
+  height:auto;
   display:grid;
-  grid-template-rows:repeat(3,minmax(0,1fr));
+  grid-template-rows:repeat(3,clamp(54px,8.5vh,70px));
   gap:5px;
 }
 .ticata-page #ticataModal .tika-line{
@@ -159,8 +159,10 @@ body.ticata-page{overflow:hidden}
 
 .ticata-page #ticataModal .tika-center{
   min-width:0;
-  min-height:0;
-  height:100%;
+  min-height:clamp(240px,50vh,360px);
+  height:auto;
+  max-height:100%;
+  align-self:center;
   position:static;
   top:auto;
   padding:12px 9px;
@@ -193,7 +195,9 @@ body.ticata-page{overflow:hidden}
   .ticata-page #ticataModal .ticata-arena{gap:8px}
   .ticata-page #ticataModal .tika-side{padding:6px;gap:3px}
   .ticata-page #ticataModal .player-side,
-  .ticata-page #ticataModal .bot-side{grid-template-rows:auto 58px auto minmax(0,1fr)}
+  .ticata-page #ticataModal .bot-side{grid-template-rows:auto 58px auto auto}
+  .ticata-page #ticataModal .tika-board{grid-template-rows:repeat(3,54px)}
+  .ticata-page #ticataModal .tika-center{min-height:260px}
   .ticata-page #ticataModal .side-dice-panel{height:58px;padding:2px 6px}
   .ticata-page #ticataModal .side-dice-panel .dice-stage{width:50px;height:50px}
   .ticata-page #ticataModal .dice-cube{width:46px;height:46px}
