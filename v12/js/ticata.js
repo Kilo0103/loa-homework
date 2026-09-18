@@ -4,7 +4,7 @@ const playerBoardEl=document.getElementById('playerBoard');
 const botBoardEl=document.getElementById('botBoard');
 const statusEl=document.getElementById('ticataStatus');
 const statEl=document.getElementById('ticataStats');
-const currentDieEl=document.getElementById('currentDie');
+const currentDieEl=document.getElementById('diceCube');
 const dieTypeEl=document.getElementById('dieType');
 const turnLabelEl=document.getElementById('turnLabel');
 const hintEl=document.getElementById('gameHint');
@@ -12,6 +12,10 @@ const rerollBtn=document.getElementById('rerollBtn');
 const rerollChoice=document.getElementById('rerollChoice');
 const playerTotalEl=document.getElementById('playerTotal');
 const botTotalEl=document.getElementById('botTotal');
+
+let visualDie=null;
+let dieAnimating=false;
+let lastFlick=null;
 
 const state={
   board:{player:[[],[],[]],bot:[[],[],[]]},
@@ -61,7 +65,8 @@ function renderBoard(side,root){
     const slots=[...line];
     while(slots.length<3)slots.push(null);
     const can=canPlace(side,i);
-    return `<button class="tika-line ${can?'placeable':''}" data-game-place data-side="${side}" data-line="${i}" ${can?'':'disabled'}>
+    const flicked=lastFlick&&lastFlick.side===side&&lastFlick.line===i;
+    return `<button class="tika-line ${can?'placeable':''} ${flicked?'flicked':''}" data-game-place data-side="${side}" data-line="${i}" ${can?'':'disabled'}>
       <span class="line-no">${i+1}줄</span>
       <span class="dice-row">${slots.map(d=>dieHtml(d)).join('')}</span>
       <span class="line-score">${score}</span>
@@ -69,7 +74,7 @@ function renderBoard(side,root){
   }).join('');
 }
 function canPlace(targetSide,line){
-  if(state.over||state.turn!=='player'||!state.current||state.thinking)return false;
+  if(state.over||state.turn!=='player'||!state.current||state.thinking||dieAnimating)return false;
   if(state.board[targetSide][line].length>=3)return false;
   if(state.current.shield){
     if(state.current.opening&&targetSide!=='player')return false;
@@ -77,16 +82,29 @@ function canPlace(targetSide,line){
   }
   return targetSide==='player';
 }
+function animateDie(die){
+  if(!die){visualDie=null;dieAnimating=false;return;}
+  if(visualDie===die)return;
+  visualDie=die;
+  dieAnimating=true;
+  currentDieEl.className=`dice-cube rolling ${die.shield?'shield':''}`;
+  setTimeout(()=>{
+    currentDieEl.className=`dice-cube face-${die.value} ${die.shield?'shield':''} landed`;
+    dieAnimating=false;
+    renderBoard('player',playerBoardEl);
+    renderBoard('bot',botBoardEl);
+    setTimeout(()=>currentDieEl.classList.remove('landed'),220);
+  },720);
+}
 function renderCurrent(){
-  currentDieEl.textContent=state.current?.value??'?';
-  currentDieEl.classList.toggle('shield',!!state.current?.shield);
   dieTypeEl.textContent=state.current?(state.current.shield?(state.current.bonus?'보너스 실드':'실드 주사위'):'일반 주사위'):'주사위';
   turnLabelEl.textContent=state.turn==='player'?'내 차례':'BOT 차례';
-  rerollBtn.hidden=state.turn!=='player'||state.over||!state.current||!state.reroll.player||!!state.current.bonus;
+  rerollBtn.hidden=state.turn!=='player'||state.over||!state.current||!state.reroll.player||!!state.current.bonus||dieAnimating;
   rerollChoice.hidden=!state.alt;
   if(state.alt){
     rerollChoice.innerHTML=`<span>리롤 결과</span><button class="btn small" data-game-pick="old">기존 ${state.current.value}</button><button class="btn small primary" data-game-pick="new">새 ${state.alt}</button>`;
   }
+  if(state.current)animateDie(state.current);
 }
 function render(){
   renderBoard('player',playerBoardEl);
@@ -116,7 +134,12 @@ function removeMatches(attacker,line,value){
   const target=other(attacker);
   const before=state.board[target][line].length;
   state.board[target][line]=state.board[target][line].filter(d=>d.shield||d.value!==value);
-  return before-state.board[target][line].length;
+  const removed=before-state.board[target][line].length;
+  if(removed>0){
+    lastFlick={side:target,line};
+    setTimeout(()=>{lastFlick=null;render();},420);
+  }
+  return removed;
 }
 function place(side,targetSide,line){
   if(state.board[targetSide][line].length>=3)return false;
@@ -167,7 +190,7 @@ function beginTurn(){
     hintEl.textContent='BOT이 생각 중...';
     state.thinking=true;
     render();
-    setTimeout(botTurn,350);
+    setTimeout(botTurn,900);
   }
 }
 function endTurn(){
@@ -210,7 +233,7 @@ function botTurn(){
     state.current=bonusShield();
     statusEl.textContent=`BOT 알까기 · ${removed}개 제거`;
     render();
-    setTimeout(botPlaceShield,260);
+    setTimeout(botPlaceShield,900);
   }else{
     state.current=null;
     state.thinking=false;
@@ -237,9 +260,17 @@ function finish(){
   render();
 }
 function doReroll(){
-  if(state.turn!=='player'||!state.current||!state.reroll.player||state.current.bonus||state.over)return;
+  if(state.turn!=='player'||!state.current||!state.reroll.player||state.current.bonus||state.over||dieAnimating)return;
   state.reroll.player=false;
   state.alt=roll();
+  const ghost={...state.current,value:state.alt};
+  visualDie=null;
+  animateDie(ghost);
+  setTimeout(()=>{
+    visualDie=state.current;
+    currentDieEl.className=`dice-cube face-${state.alt} ${state.current.shield?'shield':''} landed`;
+    rerollChoice.hidden=false;
+  },740);
   render();
   hintEl.textContent='기존 눈과 새 눈 중 하나를 선택하세요.';
 }
@@ -247,6 +278,7 @@ function chooseReroll(which){
   if(state.alt===null)return;
   if(which==='new')state.current.value=state.alt;
   state.alt=null;
+  visualDie=null;
   render();
   hintEl.textContent=state.current.shield?'실드 주사위를 배치하세요.':'내 보드의 원하는 줄을 선택하세요.';
 }
