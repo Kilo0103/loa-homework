@@ -69,3 +69,9 @@
   .mobile-game .tika-line{min-height:62px;grid-template-columns:31px 1fr 31px;padding:6px}
   .mobile-game .side-board-label small{display:none}
 }
+
+/* Part 12: keep Tikatuka entry reachable on phones */
+@media(max-width:620px){
+  .top-actions [data-game-open]{display:inline-grid!important;width:31px;height:31px;padding:0;place-items:center;font-size:0}
+  .top-actions [data-game-open]::before{content:"🎮";font-size:14px;line-height:1}
+}
