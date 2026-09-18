@@ -4,27 +4,47 @@ const playerBoardEl=document.getElementById('playerBoard');
 const botBoardEl=document.getElementById('botBoard');
 const statusEl=document.getElementById('ticataStatus');
 const statEl=document.getElementById('ticataStats');
-const currentDieEl=document.getElementById('diceCube');
-const dieTypeEl=document.getElementById('dieType');
-const turnLabelEl=document.getElementById('turnLabel');
+const playerDiceCube=document.getElementById('playerDiceCube');
+const botDiceCube=document.getElementById('botDiceCube');
+const playerDicePanel=document.getElementById('playerDicePanel');
+const botDicePanel=document.getElementById('botDicePanel');
+const playerDieType=document.getElementById('playerDieType');
+const botDieType=document.getElementById('botDieType');
 const hintEl=document.getElementById('gameHint');
+const rollBtn=document.getElementById('rollBtn');
 const rerollBtn=document.getElementById('rerollBtn');
 const rerollChoice=document.getElementById('rerollChoice');
 const playerTotalEl=document.getElementById('playerTotal');
 const botTotalEl=document.getElementById('botTotal');
+const matchBadge=document.getElementById('matchBadge');
+const opponentNameEl=document.getElementById('opponentName');
+const opponentLevelEl=document.getElementById('opponentLevel');
+const matchOverlay=document.getElementById('matchOverlay');
+const matchOverlayTitle=document.getElementById('matchOverlayTitle');
+const matchOverlaySub=document.getElementById('matchOverlaySub');
 
-let visualDie=null;
+const DIFFICULTIES=[
+  {id:'easy',label:'쉬움',tag:'초보'},
+  {id:'normal',label:'보통',tag:'일반'},
+  {id:'hard',label:'어려움',tag:'숙련'}
+];
+const OPPONENTS=['주사위콩','모코코77','타짜봇','알까기장인','세줄수호자','골든다이스','티카봇'];
+
 let dieAnimating=false;
 let lastFlick=null;
+let matchTimer=null;
+let matchReadyTimer=null;
 
 const state={
   board:{player:[[],[],[]],bot:[[],[],[]]},
   turn:'player',
-  phase:'idle',
+  phase:'matching',
   current:null,
+  pendingType:'normal',
   opening:true,
   reroll:{player:true,bot:true},
   difficulty:'normal',
+  opponentName:'BOT',
   alt:null,
   over:false,
   thinking:false
@@ -77,7 +97,7 @@ function renderBoard(side,root){
   }).join('');
 }
 function canPlace(targetSide,line){
-  if(state.over||state.turn!=='player'||!state.current||state.thinking||dieAnimating)return false;
+  if(state.over||state.turn!=='player'||state.phase!=='place'||!state.current||state.thinking||dieAnimating)return false;
   if(state.board[targetSide][line].length>=3)return false;
   if(state.current.shield){
     if(state.current.opening&&targetSide!=='player')return false;
@@ -85,54 +105,139 @@ function canPlace(targetSide,line){
   }
   return targetSide==='player';
 }
-function animateDie(die){
-  if(!die){visualDie=null;dieAnimating=false;return;}
-  if(visualDie===die)return;
-  visualDie=die;
+function dieClass(die,extra=''){
+  return `dice-cube face-${die?.value||1} ${die?.shield?'shield':''} ${extra}`.trim();
+}
+function animateDie(side,die,done){
+  const cube=side==='player'?playerDiceCube:botDiceCube;
+  const panel=side==='player'?playerDicePanel:botDicePanel;
   dieAnimating=true;
-  currentDieEl.className=`dice-cube rolling ${die.shield?'shield':''}`;
+  panel.classList.add('active','rolling-owner');
+  cube.className=`dice-cube rolling ${die.shield?'shield':''}`;
   setTimeout(()=>{
-    currentDieEl.className=`dice-cube face-${die.value} ${die.shield?'shield':''} landed`;
+    cube.className=dieClass(die,'landed');
     dieAnimating=false;
+    panel.classList.remove('rolling-owner');
     renderBoard('player',playerBoardEl);
     renderBoard('bot',botBoardEl);
-    setTimeout(()=>currentDieEl.classList.remove('landed'),220);
+    setTimeout(()=>cube.classList.remove('landed'),220);
+    done?.();
   },720);
 }
-function renderCurrent(){
-  dieTypeEl.textContent=state.current?(state.current.shield?(state.current.bonus?'보너스 실드':'실드 주사위'):'일반 주사위'):'주사위';
-  turnLabelEl.textContent=state.turn==='player'?'내 차례':'BOT 차례';
-  rerollBtn.hidden=state.turn!=='player'||state.over||!state.current||!state.reroll.player||!!state.current.bonus||dieAnimating;
-  rerollChoice.hidden=!state.alt;
-  if(state.alt){
-    rerollChoice.innerHTML=`<span>리롤 결과</span><button class="btn small" data-game-pick="old">기존 ${state.current.value}</button><button class="btn small primary" data-game-pick="new">새 ${state.alt}</button>`;
+function currentTypeLabel(){
+  if(!state.current)return '대기';
+  if(state.current.shield)return state.current.bonus?'보너스 실드':'실드 주사위';
+  return '일반 주사위';
+}
+function renderControls(){
+  const myTurn=state.turn==='player'&&!state.over;
+  playerDicePanel.classList.toggle('active',myTurn);
+  botDicePanel.classList.toggle('active',state.turn==='bot'&&!state.over);
+  playerDicePanel.classList.toggle('inactive',!myTurn);
+  botDicePanel.classList.toggle('inactive',state.turn!=='bot'||state.over);
+
+  playerDieType.textContent=state.turn==='player'?currentTypeLabel():'대기';
+  botDieType.textContent=state.turn==='bot'?currentTypeLabel():'대기';
+
+  const canRoll=myTurn&&state.phase==='await-roll'&&!dieAnimating;
+  rollBtn.hidden=!canRoll;
+  if(canRoll){
+    rollBtn.textContent=state.pendingType==='bonus-shield'?'보너스 실드 굴리기':state.pendingType==='opening-shield'?'첫 실드 주사위 굴리기':'주사위 굴리기';
   }
-  if(state.current)animateDie(state.current);
+
+  rerollBtn.hidden=!(myTurn&&state.phase==='place'&&state.current&&!state.current.bonus&&state.reroll.player&&!dieAnimating);
+  rerollChoice.hidden=state.alt===null;
 }
 function render(){
   renderBoard('player',playerBoardEl);
   renderBoard('bot',botBoardEl);
   playerTotalEl.textContent=`${totalScore('player')}점`;
   botTotalEl.textContent=`${totalScore('bot')}점`;
-  renderCurrent();
+  renderControls();
 }
-function setHint(text){hintEl.textContent=text;}
-function start(){
+function showMatchOverlay(title,sub,matched=false){
+  matchOverlay.classList.add('show');
+  matchOverlay.classList.toggle('matched',matched);
+  matchOverlayTitle.textContent=title;
+  matchOverlaySub.textContent=sub;
+}
+function hideMatchOverlay(){matchOverlay.classList.remove('show','matched');}
+function clearMatchTimers(){
+  if(matchTimer)clearTimeout(matchTimer);
+  if(matchReadyTimer)clearTimeout(matchReadyTimer);
+  matchTimer=null;matchReadyTimer=null;
+}
+function newMatch(){
+  clearMatchTimers();
+  state.phase='matching';
+  state.over=false;
+  state.current=null;
+  state.alt=null;
+  state.thinking=false;
+  state.board={player:[[],[],[]],bot:[[],[],[]]};
+  state.reroll={player:true,bot:true};
+  statusEl.textContent='상대 찾는 중...';
+  hintEl.textContent='티카투카 매칭을 검색하고 있습니다.';
+  opponentNameEl.textContent='상대 찾는 중';
+  opponentLevelEl.textContent='MATCHMAKING';
+  matchBadge.classList.remove('found');
+  playerDiceCube.className='dice-cube face-1 idle';
+  botDiceCube.className='dice-cube face-1 idle';
+  render();
+  showMatchOverlay('상대 찾는 중...','잠시만 기다려 주세요.');
+  const wait=700+Math.floor(Math.random()*650);
+  matchTimer=setTimeout(()=>{
+    const diff=DIFFICULTIES[Math.floor(Math.random()*DIFFICULTIES.length)];
+    const name=OPPONENTS[Math.floor(Math.random()*OPPONENTS.length)];
+    state.difficulty=diff.id;
+    state.opponentName=name;
+    opponentNameEl.textContent=name;
+    opponentLevelEl.textContent=`${diff.tag} · 난이도 ${diff.label}`;
+    matchBadge.classList.add('found');
+    statusEl.textContent='MATCH FOUND';
+    showMatchOverlay('MATCH FOUND',`${name} · 난이도 ${diff.label}`,true);
+    matchReadyTimer=setTimeout(()=>{
+      hideMatchOverlay();
+      startRound();
+    },650);
+  },wait);
+}
+function startRound(){
   state.board={player:[[],[],[]],bot:[[],[],[]]};
   state.turn='player';
-  state.phase='place';
-  state.current={value:roll(),shield:true,opening:true,bonus:false};
+  state.phase='await-roll';
+  state.pendingType='opening-shield';
+  state.current=null;
   state.opening=true;
   state.reroll={player:true,bot:true};
   state.alt=null;
   state.over=false;
   state.thinking=false;
-  statusEl.textContent='게임 진행 중';
-  hintEl.textContent='첫 실드 주사위를 내 보드에 배치하세요.';
+  statusEl.textContent='내 차례';
+  hintEl.textContent='먼저 첫 실드 주사위를 굴리세요.';
   render();
 }
-function normalDie(){return {value:roll(),shield:false,opening:false,bonus:false};}
-function bonusShield(){return {value:roll(),shield:true,opening:false,bonus:true};}
+function createDie(type){
+  return {
+    value:roll(),
+    shield:type==='opening-shield'||type==='bonus-shield',
+    opening:type==='opening-shield',
+    bonus:type==='bonus-shield'
+  };
+}
+function playerRoll(){
+  if(state.turn!=='player'||state.phase!=='await-roll'||state.over||dieAnimating)return;
+  state.current=createDie(state.pendingType);
+  state.phase='rolling';
+  hintEl.textContent='주사위를 굴리는 중...';
+  renderControls();
+  animateDie('player',state.current,()=>{
+    state.phase='place';
+    statusEl.textContent='내 차례';
+    hintEl.textContent=state.current.shield?(state.current.bonus?'보너스 실드를 배치하세요.':'실드 주사위를 내 보드에 배치하세요.'):'내 보드의 원하는 줄을 선택하세요.';
+    render();
+  });
+}
 function removeMatches(attacker,line,value){
   const target=other(attacker);
   const before=state.board[target][line].length;
@@ -157,12 +262,21 @@ function place(side,targetSide,line){
   }
   const removed=removeMatches(side,line,d.value);
   if(removed>0){
-    state.current=bonusShield();
+    state.current=null;
     state.alt=null;
-    statusEl.textContent=`알까기! ${removed}개 제거`;
-    hintEl.textContent='보너스 실드를 내 보드 또는 상대 보드에 배치하세요.';
-    render();
-    if(side==='bot')setTimeout(botPlaceShield,900);
+    state.pendingType='bonus-shield';
+    if(side==='player'){
+      state.phase='await-roll';
+      statusEl.textContent=`알까기! ${removed}개 제거`;
+      hintEl.textContent='보너스 실드 주사위를 직접 굴리세요.';
+      render();
+    }else{
+      state.phase='bot-wait';
+      statusEl.textContent=`${state.opponentName} 알까기 · ${removed}개 제거`;
+      hintEl.textContent='상대가 보너스 실드 주사위를 굴립니다.';
+      render();
+      setTimeout(botRoll,500);
+    }
     return true;
   }
   state.current=null;
@@ -182,18 +296,21 @@ function skipIfFull(){
 function beginTurn(){
   if(skipIfFull())return;
   state.alt=null;
-  state.current=normalDie();
+  state.current=null;
+  state.pendingType='normal';
   if(state.turn==='player'){
-    statusEl.textContent='내 차례';
-    hintEl.textContent='내 보드의 원하는 줄을 선택하세요.';
+    state.phase='await-roll';
     state.thinking=false;
+    statusEl.textContent='내 차례';
+    hintEl.textContent='주사위 굴리기를 눌러 주세요.';
     render();
   }else{
-    statusEl.textContent='BOT 차례';
-    hintEl.textContent='BOT이 생각 중...';
+    state.phase='bot-wait';
     state.thinking=true;
+    statusEl.textContent=`${state.opponentName} 차례`;
+    hintEl.textContent='상대가 주사위를 굴릴 준비를 합니다.';
     render();
-    setTimeout(botTurn,900);
+    setTimeout(botRoll,500);
   }
 }
 function endTurn(){
@@ -215,8 +332,7 @@ function previewNormal(line,value){
   own.push({value,shield:false});
   const removed=player.filter(d=>!d.shield&&d.value===value).length;
   const afterPlayer=player.filter(d=>d.shield||d.value!==value);
-  const afterOwnScore=lineScore(own),afterPlayerScore=lineScore(afterPlayer);
-  return {line,removed,beforeOwn,beforePlayer,afterOwn:afterOwnScore,afterPlayer:afterPlayerScore};
+  return {line,removed,beforeOwn,beforePlayer,afterOwn:lineScore(own),afterPlayer:lineScore(afterPlayer)};
 }
 function normalPlacementValue(value,line){
   const p=previewNormal(line,value);
@@ -230,9 +346,7 @@ function normalPlacementValue(value,line){
   return score;
 }
 function rankedBotLines(value){
-  return legalOwnLines('bot')
-    .map(line=>({line,score:normalPlacementValue(value,line)}))
-    .sort((a,b)=>b.score-a.score||Math.random()-.5);
+  return legalOwnLines('bot').map(line=>({line,score:normalPlacementValue(value,line)})).sort((a,b)=>b.score-a.score||Math.random()-.5);
 }
 function botChooseLine(value){
   const ranked=rankedBotLines(value);
@@ -263,11 +377,9 @@ function botShouldReroll(){
   state.reroll.bot=false;
   const old=currentValue;
   if(altScore>=currentScore)state.current.value=alt;
-  visualDie=null;
-  statusEl.textContent=`BOT 타짜 · ${old} → ${alt} · ${state.current.value} 선택`;
-  hintEl.textContent='BOT이 리롤 결과를 고르는 중...';
-  render();
-  setTimeout(botTurn,900);
+  statusEl.textContent=`${state.opponentName} 리롤 · ${old} → ${alt}`;
+  hintEl.textContent='상대가 리롤 결과를 선택했습니다.';
+  animateDie('bot',state.current,()=>setTimeout(botAct,250));
   return true;
 }
 function shieldTargetValue(t,value){
@@ -307,25 +419,42 @@ function botPlaceShield(){
   const t=botChooseShieldTarget();
   if(!t){state.current=null;state.thinking=false;endTurn();return;}
   state.board[t.side][t.line].push({...state.current});
-  statusEl.textContent=t.side==='player'?'BOT 실드 방해':'BOT 실드 강화';
+  statusEl.textContent=t.side==='player'?`${state.opponentName} 실드 방해`:`${state.opponentName} 실드 강화`;
   state.current=null;
   state.thinking=false;
   endTurn();
 }
-function botTurn(){
-  if(state.over)return;
-  const own=legalOwnLines('bot');
-  if(!own.length){state.thinking=false;state.current=null;endTurn();return;}
+function botRoll(){
+  if(state.turn!=='bot'||state.over)return;
+  state.current=createDie(state.pendingType);
+  state.phase='rolling';
+  hintEl.textContent='상대 주사위가 굴러갑니다.';
+  renderControls();
+  animateDie('bot',state.current,()=>{
+    if(state.current?.bonus){
+      state.phase='bot-place';
+      setTimeout(botPlaceShield,260);
+    }else{
+      state.phase='bot-place';
+      setTimeout(botAct,260);
+    }
+  });
+}
+function botAct(){
+  if(state.over||state.turn!=='bot'||!state.current)return;
   if(botShouldReroll())return;
   const line=botChooseLine(state.current.value);
-  if(line<0){state.thinking=false;state.current=null;endTurn();return;}
+  if(line<0){state.current=null;state.thinking=false;endTurn();return;}
   state.board.bot[line].push({...state.current});
   const removed=removeMatches('bot',line,state.current.value);
   if(removed>0){
-    state.current=bonusShield();
-    statusEl.textContent=`BOT 알까기 · ${removed}개 제거`;
+    state.current=null;
+    state.pendingType='bonus-shield';
+    state.phase='bot-wait';
+    statusEl.textContent=`${state.opponentName} 알까기 · ${removed}개 제거`;
+    hintEl.textContent='상대가 보너스 실드 주사위를 굴립니다.';
     render();
-    setTimeout(botPlaceShield,900);
+    setTimeout(botRoll,500);
   }else{
     state.current=null;
     state.thinking=false;
@@ -335,6 +464,7 @@ function botTurn(){
 function finish(){
   state.over=true;
   state.thinking=false;
+  state.phase='over';
   state.current=null;
   state.alt=null;
   const w=lineWins(),pt=totalScore('player'),bt=totalScore('bot');
@@ -352,48 +482,41 @@ function finish(){
   render();
 }
 function doReroll(){
-  if(state.turn!=='player'||!state.current||!state.reroll.player||state.current.bonus||state.over||dieAnimating)return;
+  if(state.turn!=='player'||state.phase!=='place'||!state.current||!state.reroll.player||state.current.bonus||state.over||dieAnimating)return;
   state.reroll.player=false;
   state.alt=roll();
-  dieAnimating=true;
+  state.phase='rerolling';
   rerollBtn.hidden=true;
   rerollChoice.hidden=true;
-  currentDieEl.className=`dice-cube rolling ${state.current.shield?'shield':''}`;
+  const preview={...state.current,value:state.alt};
   hintEl.textContent='리롤 중...';
-  setTimeout(()=>{
-    currentDieEl.className=`dice-cube face-${state.alt} ${state.current.shield?'shield':''} landed`;
-    dieAnimating=false;
+  animateDie('player',preview,()=>{
+    state.phase='reroll-choice';
     rerollChoice.innerHTML=`<span>리롤 결과</span><button class="btn small" data-game-pick="old">기존 ${state.current.value}</button><button class="btn small primary" data-game-pick="new">새 ${state.alt}</button>`;
     rerollChoice.hidden=false;
     hintEl.textContent='기존 눈과 새 눈 중 하나를 선택하세요.';
-  },720);
+  });
 }
 function chooseReroll(which){
-  if(state.alt===null||dieAnimating)return;
+  if(state.phase!=='reroll-choice'||state.alt===null||dieAnimating)return;
   if(which==='new')state.current.value=state.alt;
   state.alt=null;
-  visualDie=state.current;
-  currentDieEl.className=`dice-cube face-${state.current.value} ${state.current.shield?'shield':''} landed`;
+  state.phase='place';
+  playerDiceCube.className=dieClass(state.current,'landed');
   render();
   hintEl.textContent=state.current.shield?'실드 주사위를 배치하세요.':'내 보드의 원하는 줄을 선택하세요.';
 }
 
 document.addEventListener('click',e=>{
-  if(e.target.closest('[data-game-open]')){modal.classList.add('open');start();renderStats();return;}
-  if(e.target.closest('[data-game-close]')){modal.classList.remove('open');return;}
-  if(e.target.closest('[data-game-reset]')){start();return;}
+  if(e.target.closest('[data-game-open]')){modal.classList.add('open');renderStats();newMatch();return;}
+  if(e.target.closest('[data-game-close]')){clearMatchTimers();modal.classList.remove('open');return;}
+  if(e.target.closest('[data-game-reset]')){newMatch();return;}
+  if(e.target.closest('[data-game-roll]')){playerRoll();return;}
   if(e.target.closest('[data-game-reroll]')){doReroll();return;}
-  const diff=e.target.closest('[data-game-difficulty]');
-  if(diff){
-    state.difficulty=diff.dataset.gameDifficulty;
-    document.querySelectorAll('[data-game-difficulty]').forEach(b=>b.classList.toggle('active',b===diff));
-    start();
-    return;
-  }
   const pick=e.target.closest('[data-game-pick]');
   if(pick){chooseReroll(pick.dataset.gamePick);return;}
   const line=e.target.closest('[data-game-place]');
-  if(!line||line.disabled||state.turn!=='player'||!state.current)return;
+  if(!line||line.disabled||state.turn!=='player'||state.phase!=='place'||!state.current)return;
   const targetSide=line.dataset.side,idx=Number(line.dataset.line);
   if(!canPlace(targetSide,idx))return;
   place('player',targetSide,idx);
