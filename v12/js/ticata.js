@@ -480,15 +480,59 @@ function previewNormal(line,value){
   }
   return {line,removed:0,beforeOwn,beforePlayer,afterOwn:lineScore(own),afterPlayer:beforePlayer};
 }
+function fieldLead(botScore,playerScore){
+  return botScore>playerScore?1:botScore<playerScore?-1:0;
+}
+function currentFieldWins(){
+  let bot=0,player=0;
+  for(let i=0;i<3;i++){
+    const lead=fieldLead(lineScore(state.board.bot[i]),lineScore(state.board.player[i]));
+    if(lead>0)bot++;
+    else if(lead<0)player++;
+  }
+  return {bot,player};
+}
+function strategicFieldBonus(line,p,grade){
+  if(grade<3)return 0;
+  const before=fieldLead(p.beforeOwn,p.beforePlayer);
+  const after=fieldLead(p.afterOwn,p.afterPlayer);
+  const wins=currentFieldWins();
+  let bonus=0;
+
+  // Flipping a field matters much more than adding raw score.
+  if(before<0&&after>0)bonus+=grade===4?34:26;
+  else if(before===0&&after>0)bonus+=grade===4?22:16;
+  else if(before<0&&after===0)bonus+=grade===4?12:8;
+
+  // Prioritize the second field needed for match control.
+  const botWinsAfter=wins.bot+(before<=0&&after>0?1:0)-(before>0&&after<=0?1:0);
+  const playerWinsAfter=wins.player+(before>=0&&after<0?1:0)-(before<0&&after>=0?1:0);
+  if(botWinsAfter>=2&&wins.bot<2)bonus+=grade===4?42:30;
+  if(wins.player>=2&&playerWinsAfter<wins.player)bonus+=grade===4?38:27;
+
+  // Do not waste strong dice on a field already comfortably ahead.
+  const leadMargin=p.beforeOwn-p.beforePlayer;
+  if(before>0&&leadMargin>=8&&p.removed===0)bonus-=grade===4?15:10;
+
+  // Breaking a developed opponent field is especially valuable.
+  if(p.removed>0){
+    const playerDice=state.board.player[line].filter(d=>!d.shield).length;
+    bonus+=p.removed*(grade===4?8:5);
+    if(playerDice>=2)bonus+=grade===4?14:9;
+  }
+  return bonus;
+}
 function normalPlacementValue(value,line){
   const p=previewNormal(line,value);
   const comboCount=state.board.bot[line].filter(d=>d.value===value).length;
   const swing=(p.afterOwn-p.beforeOwn)+(p.beforePlayer-p.afterPlayer);
+  const grade=GRADE_ORDER[state.opponentGrade]??2;
   let score=swing*2+comboCount*5+p.removed*11;
   if(p.beforeOwn<=p.beforePlayer&&p.afterOwn>p.afterPlayer)score+=12;
   if(p.beforeOwn>p.beforePlayer&&p.afterOwn>=p.afterPlayer)score+=3;
-  if(state.board.bot[line].length===2&&p.removed===0)score-=GRADE_ORDER[state.opponentGrade]>=3?5:2;
-  if(p.removed>0&&p.beforePlayer>=12)score+=GRADE_ORDER[state.opponentGrade]>=3?8:4;
+  if(state.board.bot[line].length===2&&p.removed===0)score-=grade>=3?5:2;
+  if(p.removed>0&&p.beforePlayer>=12)score+=grade>=3?8:4;
+  score+=strategicFieldBonus(line,p,grade);
   return score;
 }
 function rankedBotLines(value){
@@ -508,7 +552,7 @@ function botChooseLine(value){
     return ranked[0].line;
   }
   if(grade===3){
-    if(ranked.length>1&&Math.random()<0.06)return ranked[1].line;
+    if(ranked.length>1&&Math.random()<0.025)return ranked[1].line;
     return ranked[0].line;
   }
   return ranked[0].line;
@@ -530,9 +574,11 @@ function botShouldReroll(){
     const flick=legalOwnLines('bot').some(i=>state.board.player[i].some(d=>!d.shield&&d.value===currentValue));
     use=!flick&&currentValue<=2&&(alt>=4||altScore>currentScore+4);
   }else if(grade===3){
-    use=altScore>currentScore+3||(currentValue<=2&&altScore>currentScore);
+    const hasFlick=legalOwnLines('bot').some(i=>state.board.player[i].some(d=>!d.shield&&d.value===currentValue));
+    use=!hasFlick&&(altScore>currentScore+2||(currentValue<=3&&altScore>currentScore));
   }else{
-    use=altScore>currentScore+1||(currentValue<=2&&altScore>=currentScore);
+    const hasFlick=legalOwnLines('bot').some(i=>state.board.player[i].some(d=>!d.shield&&d.value===currentValue));
+    use=!hasFlick&&(altScore>currentScore||(currentValue<=3&&altScore>=currentScore));
   }
   if(!use)return false;
   state.reroll.bot=false;
@@ -545,16 +591,22 @@ function botShouldReroll(){
 }
 function shieldTargetValue(t,value){
   const line=state.board[t.side][t.line];
+  const grade=GRADE_ORDER[state.opponentGrade]??2;
+  const wins=currentFieldWins();
+
   if(t.side==='bot'){
     const before=lineScore(line);
     const after=lineScore([...line,{value,shield:true}]);
     const combo=line.filter(d=>d.value===value).length;
     const rival=lineScore(state.board.player[t.line]);
     let score=(after-before)*2+combo*5;
-    if(before<=rival&&after>rival)score+=10;
-    if(line.length===2)score+=2;
+    if(before<=rival&&after>rival)score+=grade===4?28:grade===3?20:10;
+    if(line.length===2)score+=grade>=3?7:2;
+    if(grade>=3&&wins.bot===1&&before<=rival&&after>rival)score+=grade===4?30:20;
+    if(grade>=3&&before-rival>=8)score-=grade===4?12:8;
     return score;
   }
+
   const before=lineScore(line);
   const after=lineScore([...line,{value,shield:true}]);
   const helpsCombo=line.some(d=>d.value===value);
@@ -562,6 +614,14 @@ function shieldTargetValue(t,value){
   let score=lock-(after-before)*.8+(value<=3?8:0)-(helpsCombo?14:0);
   const botScore=lineScore(state.board.bot[t.line]);
   if(before>botScore&&line.length===2)score+=7;
+
+  if(grade>=3){
+    // A low-value shield on the opponent can poison a nearly-complete field.
+    if(line.length===2)score+=grade===4?18:12;
+    if(before>botScore&&wins.player>=1)score+=grade===4?16:10;
+    if(value<=2)score+=grade===4?8:5;
+    if(helpsCombo)score-=grade===4?10:6;
+  }
   return score;
 }
 function botChooseShieldTarget(){
