@@ -48,6 +48,7 @@ const CARD_OPPONENTS=[
   {name:'샨디',grade:'전설',ai:'legendary-card'},
   {name:'베아트리스',grade:'전설',ai:'legendary-card'}
 ];
+const CARD_GRADES=['일반','고급','희귀','영웅','전설'];
 const GRADE_ORDER={일반:0,고급:1,희귀:2,영웅:3,전설:4};
 const GRADE_CLASS={일반:'normal',고급:'uncommon',희귀:'rare',영웅:'epic',전설:'legendary'};
 
@@ -209,7 +210,9 @@ function newMatch(){
   showMatchOverlay('상대 찾는 중...','잠시만 기다려 주세요.');
   const wait=700+Math.floor(Math.random()*650);
   matchTimer=setTimeout(()=>{
-    const opponent=CARD_OPPONENTS[Math.floor(Math.random()*CARD_OPPONENTS.length)];
+    const grade=CARD_GRADES[Math.floor(Math.random()*CARD_GRADES.length)];
+    const gradePool=CARD_OPPONENTS.filter(card=>card.grade===grade);
+    const opponent=gradePool[Math.floor(Math.random()*gradePool.length)];
     state.difficulty=opponent.ai;
     state.opponentGrade=opponent.grade;
     state.opponentName=opponent.name;
