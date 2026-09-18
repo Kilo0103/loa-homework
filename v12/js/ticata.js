@@ -22,6 +22,13 @@ const opponentLevelEl=document.getElementById('opponentLevel');
 const matchOverlay=document.getElementById('matchOverlay');
 const matchOverlayTitle=document.getElementById('matchOverlayTitle');
 const matchOverlaySub=document.getElementById('matchOverlaySub');
+const resultOverlay=document.getElementById('resultOverlay');
+const resultCard=document.getElementById('resultCard');
+const resultTitle=document.getElementById('resultTitle');
+const resultOpponent=document.getElementById('resultOpponent');
+const resultPlayerScore=document.getElementById('resultPlayerScore');
+const resultBotScore=document.getElementById('resultBotScore');
+const resultLines=document.getElementById('resultLines');
 
 const CARD_OPPONENTS=[
   {name:'키에사',grade:'일반',ai:'normal-card'},
@@ -111,7 +118,7 @@ function renderBoard(side,root){
     const slots=[...line];
     while(slots.length<3)slots.push(null);
     const can=canPlace(side,i);
-    const flicked=lastFlick&&lastFlick.side===side&&lastFlick.line===i;
+    const flicked=lastFlick&&lastFlick.line===i&&(lastFlick.side===side||lastFlick.attacker===side);
     return `<button class="tika-line ${lead} ${can?'placeable':''} ${flicked?'flicked':''}" data-game-place data-side="${side}" data-line="${i}" ${can?'':'disabled'}>
       <span class="line-no">${i+1}줄</span>
       <span class="dice-row">${slots.map(d=>dieHtml(d)).join('')}</span>
@@ -185,6 +192,17 @@ function showMatchOverlay(title,sub,matched=false){
   matchOverlaySub.textContent=sub;
 }
 function hideMatchOverlay(){matchOverlay.classList.remove('show','matched');}
+function hideResultOverlay(){resultOverlay.classList.remove('show');resultCard.classList.remove('win','lose','draw');}
+function showResultOverlay(result,w,pt,bt){
+  resultTitle.textContent=result==='win'?'승리':result==='lose'?'패배':'무승부';
+  resultOpponent.textContent=`${state.opponentName} · ${state.opponentGrade} 카드`;
+  resultPlayerScore.textContent=String(pt);
+  resultBotScore.textContent=String(bt);
+  resultLines.textContent=`라인 ${w.p} : ${w.b}`;
+  resultCard.classList.remove('win','lose','draw');
+  resultCard.classList.add(result);
+  resultOverlay.classList.add('show');
+}
 function clearMatchTimers(){
   if(matchTimer)clearTimeout(matchTimer);
   if(matchReadyTimer)clearTimeout(matchReadyTimer);
@@ -192,6 +210,7 @@ function clearMatchTimers(){
 }
 function newMatch(){
   clearMatchTimers();
+  hideResultOverlay();
   state.phase='matching';
   state.over=false;
   state.current=null;
@@ -269,7 +288,7 @@ function removeMatches(attacker,line,value){
   state.board[target][line]=state.board[target][line].filter(d=>d.shield||d.value!==value);
   const removed=before-state.board[target][line].length;
   if(removed>0){
-    lastFlick={side:target,line};
+    lastFlick={side:target,attacker,line};
     setTimeout(()=>{lastFlick=null;render();},420);
   }
   return removed;
@@ -287,6 +306,7 @@ function place(side,targetSide,line){
   }
   const removed=removeMatches(side,line,d.value);
   if(removed>0){
+    state.board[side][line].pop();
     state.current=null;
     state.alt=null;
     state.pendingType='bonus-shield';
@@ -494,6 +514,7 @@ function botAct(){
   state.board.bot[line].push({...state.current});
   const removed=removeMatches('bot',line,state.current.value);
   if(removed>0){
+    state.board.bot[line].pop();
     state.current=null;
     state.pendingType='bonus-shield';
     state.phase='bot-wait';
@@ -526,6 +547,7 @@ function finish(){
   saveStats(s);
   hintEl.textContent=`최종 점수 ${pt} : ${bt}`;
   render();
+  setTimeout(()=>showResultOverlay(result,w,pt,bt),360);
 }
 function doReroll(){
   if(state.turn!=='player'||state.phase!=='place'||!state.current||!state.reroll.player||state.current.bonus||state.over||dieAnimating)return;
@@ -557,6 +579,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-game-open]')){modal.classList.add('open');renderStats();newMatch();return;}
   if(e.target.closest('[data-game-close]')){clearMatchTimers();modal.classList.remove('open');return;}
   if(e.target.closest('[data-game-reset]')){newMatch();return;}
+  if(e.target.closest('[data-game-next]')){newMatch();return;}
   if(e.target.closest('[data-game-roll]')){playerRoll();return;}
   if(e.target.closest('[data-game-reroll]')){doReroll();return;}
   const pick=e.target.closest('[data-game-pick]');
