@@ -33,11 +33,29 @@ const resultTotalScore=document.getElementById('resultTotalScore');
 const mobileWidthQuery=window.matchMedia('(max-width: 820px)');
 const coarsePointerQuery=window.matchMedia('(pointer: coarse)');
 
+function browserReportsMobile(){
+  if(navigator.userAgentData&&typeof navigator.userAgentData.mobile==='boolean'){
+    return navigator.userAgentData.mobile;
+  }
+  return /Android|iPhone|iPod|Mobile|IEMobile|Opera Mini/i.test(navigator.userAgent||'');
+}
+function likelyDesktopSiteMode(){
+  if(!coarsePointerQuery.matches)return false;
+  const shortScreen=Math.min(window.screen?.width||window.innerWidth,window.screen?.height||window.innerHeight);
+  const phoneSizedScreen=shortScreen<=600;
+  const desktopLikeUA=!browserReportsMobile();
+  const desktopLikeViewport=window.innerWidth>820;
+  return desktopLikeUA&&(desktopLikeViewport||phoneSizedScreen);
+}
 function useMobileGameLayout(){
-  return mobileWidthQuery.matches||(coarsePointerQuery.matches&&window.innerWidth<=1180);
+  if(likelyDesktopSiteMode())return false;
+  if(browserReportsMobile())return true;
+  return mobileWidthQuery.matches;
 }
 function syncMobileGameLayout(){
-  modal.classList.toggle('mobile-game',useMobileGameLayout());
+  const mobile=useMobileGameLayout();
+  modal.classList.toggle('mobile-game',mobile);
+  modal.dataset.layout=mobile?'mobile':'desktop';
 }
 if(mobileWidthQuery.addEventListener){
   mobileWidthQuery.addEventListener('change',syncMobileGameLayout);
