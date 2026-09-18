@@ -319,6 +319,9 @@ function newMatch(){
   state.thinking=false;
   state.board={player:[[],[],[]],bot:[[],[],[]]};
   state.reroll={player:true,bot:true};
+  rerollChoice.hidden=true;
+  rerollChoice.innerHTML='';
+  rerollBtn.hidden=true;
   statusEl.textContent='상대 찾는 중...';
   hintEl.textContent='티카투카 매칭을 검색하고 있습니다.';
   opponentNameEl.textContent='상대 찾는 중';
@@ -678,7 +681,7 @@ function botChooseShieldTarget(){
 }
 function botPlaceShield(){
   const t=botChooseShieldTarget();
-  if(!t){state.current=null;state.thinking=false;endTurn();return;}
+  if(!t){state.current=null;clearPlacementUi('bot');state.thinking=false;endTurn();return;}
   const wasOpening=!!state.current?.opening;
   state.board[t.side][t.line].push({...state.current});
   if(wasOpening)state.opening=false;
@@ -710,7 +713,7 @@ function botAct(){
   if(state.over||state.turn!=='bot'||!state.current)return;
   if(botShouldReroll())return;
   const line=botChooseLine(state.current.value);
-  if(line<0){state.current=null;state.thinking=false;endTurn();return;}
+  if(line<0){state.current=null;clearPlacementUi('bot');state.thinking=false;endTurn();return;}
   state.board.bot[line].push({...state.current});
   const flick=resolveFlick('bot',line,state.current.value);
   clearPlacementUi('bot');
@@ -734,6 +737,8 @@ function finish(){
   state.phase='over';
   state.current=null;
   state.alt=null;
+  clearPlacementUi('player');
+  clearPlacementUi('bot');
 
   const match=evaluateMatch();
   const s=stats();
