@@ -1,6 +1,6 @@
-import { state, summary, weeklyTaskGold, weeklyTaskEarned, weeklyTaskGoldBreakdown, weeklyTaskEarnedBreakdown, character } from './state.js';
-import { RAID_CATALOG, raidById, difficultyOf } from '../data/raids.js';
-import { EXTRA_GOALS, extraSuggestions, extraPriority } from './recommend.js';
+import { state, summary, weeklyTaskGold, weeklyTaskEarned, weeklyTaskGoldBreakdown, weeklyTaskEarnedBreakdown, character } from './state.js?v=18';
+import { RAID_CATALOG, raidById, difficultyOf } from '../data/raids.js?v=18';
+import { EXTRA_GOALS, extraSuggestions, extraPriority } from './recommend.js?v=18';
 
 function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');}
 function gold(n){return `${Number(n||0).toLocaleString('ko-KR')} G`;}
