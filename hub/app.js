@@ -66,7 +66,7 @@ function render(){
   $('overallPct').textContent=`${overall}%`;
   $('goldRate').textContent=`${goldPct}%`;
   $('goldRemaining').textContent=gold(goldLeft);
-  $('goldDetail').textContent=`남음 · 획득 ${gold(s.goldEarned)} / 전체 ${gold(s.goldPotential)}`;
+  $('goldDetail').textContent=`전체 ${gold(s.goldPotential)} · 유통 ${gold(s.goldPotentialTradeable)} · 귀속 ${gold(s.goldPotentialBound)}`;
 
   $('remainingChars').textContent=String(remaining);
   $('sixCount').textContent=`${s.sixCount} / 6`;
