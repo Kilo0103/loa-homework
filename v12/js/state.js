@@ -1,4 +1,4 @@
-import { difficultyOf, distributeGateGold } from '../data/raids.js';
+import { difficultyOf, distributeGateGold, boundGoldRateOf } from '../data/raids.js';
 
 export const STORAGE_KEY='loa-homework-v12';
 const OLD_KEYS=['loa-homework-v9','loa-homework-v8'];
@@ -189,9 +189,18 @@ export function weeklyTaskEarned(t){
   }
   return t.gates.reduce((sum,g,i)=>sum+(g.done?(gateGold[i]||0):0),0);
 }
+export function weeklyTaskGoldSplit(t,amount=weeklyTaskGold(t)){
+  const total=Math.max(0,Number(amount||0));
+  const rate=t.type==='raid'?boundGoldRateOf(t.raidId,t.difficultyId):0;
+  const bound=Math.floor(total*rate);
+  return {total,tradable:total-bound,bound,rate};
+}
+export function weeklyTaskEarnedSplit(t){
+  return weeklyTaskGoldSplit(t,weeklyTaskEarned(t));
+}
 export function summary(){
   let sixDailyDone=0,sixDailyTotal=0,sixWeeklyDone=0,sixWeeklyTotal=0;
-  let extraDone=0,extraTotal=0,potential=0,earned=0;
+  let extraDone=0,extraTotal=0,potential=0,earned=0,potentialTradable=0,potentialBound=0,earnedTradable=0,earnedBound=0;
   let sixCount=0,extraCount=0;
   state.activeCharacters.forEach(c=>{
     if(c.goldCharacter){
@@ -201,8 +210,13 @@ export function summary(){
         const done=t.type==='raid'?t.gates.every(g=>g.done):t.done;
         sixWeeklyTotal++;
         if(done)sixWeeklyDone++;
-        potential+=weeklyTaskGold(t);
-        earned+=weeklyTaskEarned(t);
+        const p=weeklyTaskGoldSplit(t),e=weeklyTaskEarnedSplit(t);
+        potential+=p.total;
+        earned+=e.total;
+        potentialTradable+=p.tradable;
+        potentialBound+=p.bound;
+        earnedTradable+=e.tradable;
+        earnedBound+=e.bound;
       });
     }else{
       extraCount++;
@@ -214,7 +228,7 @@ export function summary(){
       });
     }
   });
-  return {sixDailyDone,sixDailyTotal,sixWeeklyDone,sixWeeklyTotal,extraDone,extraTotal,goldPotential:potential,goldEarned:earned,sixCount,extraCount};
+  return {sixDailyDone,sixDailyTotal,sixWeeklyDone,sixWeeklyTotal,extraDone,extraTotal,goldPotential:potential,goldEarned:earned,goldPotentialTradable:potentialTradable,goldPotentialBound:potentialBound,goldEarnedTradable:earnedTradable,goldEarnedBound:earnedBound,sixCount,extraCount};
 }
 export function makeDaily(name,target=1,restEnabled=false){
   return normalizeDaily({id:uid('d'),name,target,current:0,restEnabled,rest:0,active:true,source:'manual'});
