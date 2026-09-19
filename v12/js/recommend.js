@@ -1,5 +1,5 @@
-import { RAID_CATALOG } from '../data/raids.js?v=18';
-import { makeDaily, makeRaidWeekly } from './state.js?v=18';
+import { RAID_CATALOG, isDifficultyAvailable } from '../data/raids.js?v=19';
+import { makeDaily, makeRaidWeekly } from './state.js?v=19';
 
 export const EXTRA_GOALS=[
   {id:'gem',label:'보석'},
@@ -31,7 +31,7 @@ export function recommendedRaids(c,count=3){
   const candidates=[];
   for(const raid of RAID_CATALOG){
     if(raid.legacy)continue;
-    const eligible=raid.difficulties.filter(d=>d.ilvl<=ilvl);
+    const eligible=raid.difficulties.filter(d=>d.ilvl<=ilvl&&isDifficultyAvailable(d));
     if(!eligible.length)continue;
     eligible.sort((a,b)=>b.ilvl-a.ilvl||b.gold-a.gold);
     const d=eligible[0];
