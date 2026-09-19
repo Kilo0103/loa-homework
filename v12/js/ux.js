@@ -1,6 +1,6 @@
-import { state, save } from './state.js';
-import { recommendedDaily, recommendedRaids, extraSuggestions } from './recommend.js';
-import * as UI from './ui.js';
+import { state, save } from './state.js?v=18';
+import { recommendedDaily, recommendedRaids, extraSuggestions } from './recommend.js?v=18';
+import * as UI from './ui.js?v=18';
 
 const AUTO_DAILY_NAMES=new Set(['카오스 던전','쿠르잔 전선','혼돈의 균열','가디언 토벌','가디언의 잔영','에포나 의뢰']);
 let beforeSync=new Map();
