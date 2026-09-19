@@ -1,6 +1,6 @@
-import { state, summary, weeklyTaskGold, weeklyTaskEarned, weeklyTaskGoldBreakdown, weeklyTaskEarnedBreakdown, character } from './state.js?v=18';
-import { RAID_CATALOG, raidById, difficultyOf } from '../data/raids.js?v=18';
-import { EXTRA_GOALS, extraSuggestions, extraPriority } from './recommend.js?v=18';
+import { state, summary, weeklyTaskGold, weeklyTaskEarned, weeklyTaskGoldBreakdown, weeklyTaskEarnedBreakdown, character } from './state.js?v=19';
+import { RAID_CATALOG, raidById, difficultyOf, isDifficultyAvailable } from '../data/raids.js?v=19';
+import { EXTRA_GOALS, extraSuggestions, extraPriority } from './recommend.js?v=19';
 
 function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');}
 function gold(n){return `${Number(n||0).toLocaleString('ko-KR')} G`;}
@@ -177,7 +177,11 @@ export function updateCandidateCount(){setText('selectedCount',`${document.query
 export function raidOptions(selected=''){return RAID_CATALOG.map(r=>`<option value="${r.id}" ${r.id===selected?'selected':''}>${esc(r.group)} · ${esc(r.name)}${r.legacy?' (레거시)':''}</option>`).join('');}
 export function difficultyOptions(raidId,selected=''){
   const r=raidById(raidId);
-  return (r?.difficulties||[]).map(d=>`<option value="${d.id}" ${d.id===selected?'selected':''}>${esc(d.name)} · Lv.${d.ilvl.toLocaleString('ko-KR')} · ${gold(d.gold)}</option>`).join('');
+  return (r?.difficulties||[]).map(d=>{
+    const upcoming=!isDifficultyAvailable(d)&&!!d.availableFrom;
+    const release=upcoming?` · ${d.availableFrom.slice(5).replace('-','/')} 예정`:'';
+    return `<option value="${d.id}" ${d.id===selected?'selected':''} ${upcoming?'disabled':''}>${esc(d.name)} · Lv.${d.ilvl.toLocaleString('ko-KR')} · ${gold(d.gold)}${release}</option>`;
+  }).join('');
 }
 function dailyEditor(t){
   return `<div class="edit-row daily-edit" data-id="${esc(t.id)}" data-current="${t.current}" data-active="${t.active!==false?'1':'0'}" data-source="${esc(t.source||'manual')}"><input class="input task-name" value="${esc(t.name)}" placeholder="숙제 이름"><input class="input target" type="number" min="1" max="99" value="${t.target}"><label class="tiny-check"><input type="checkbox" class="rest-enabled" ${t.restEnabled?'checked':''}>휴게</label><input class="input rest-value" type="number" min="0" max="200" value="${t.rest}" ${t.restEnabled?'':'disabled'}><button class="remove" data-action="remove-editor-row">✕</button></div>`;
