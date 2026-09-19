@@ -1,5 +1,5 @@
-import { state, summary, weeklyTaskGold, weeklyTaskEarned, character } from './state.js';
-import { RAID_CATALOG, raidById, difficultyOf } from '../data/raids.js';
+import { state, summary, weeklyTaskGold, weeklyTaskEarned, weeklyTaskGoldSplit, weeklyTaskEarnedSplit, character } from './state.js';
+import { RAID_CATALOG, raidById, difficultyOf, boundGoldRateOf } from '../data/raids.js';
 import { EXTRA_GOALS, extraSuggestions, extraPriority } from './recommend.js';
 
 function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');}
@@ -21,6 +21,7 @@ export function renderSummary(){
   document.getElementById('weeklyBar').style.width=`${wp}%`;
   setText('goldPotential',gold(s.goldPotential));
   setText('goldEarned',`획득 ${gold(s.goldEarned)} · 남음 ${gold(s.goldPotential-s.goldEarned)}`);
+  setText('goldSplit',`유통 ${gold(s.goldPotentialTradable)} · 귀속 ${gold(s.goldPotentialBound)}`);
   setText('extraActive',`${s.extraDone} / ${s.extraTotal}`);
   setText('extraText',`Extra ${s.extraCount}명 · 활성 숙제 ${ep}%`);
   setText('rosterRoleCount',`The Six ${s.sixCount}/6`);
@@ -45,8 +46,11 @@ function weeklyHtml(c,t,extra=false){
   </div>`;
   const r=raidById(t.raidId),d=difficultyOf(t.raidId,t.difficultyId);
   if(!r||!d)return `<div class="weekly-item broken">알 수 없는 레이드${off}</div>`;
+  const p=weeklyTaskGoldSplit(t),e=weeklyTaskEarnedSplit(t),rate=p.rate;
+  const kind=rate>=1?'귀속 100%':rate>0?`귀속 ${Math.round(rate*100)}%`:'유통 100%';
+  const kindClass=rate>=1?'bound-all':rate>0?'bound-mixed':'tradable-all';
   return `<div class="weekly-item">
-    <div class="raid-copy"><strong>${esc(r.name)} <em>${esc(d.name)}</em></strong><small>Lv.${d.ilvl.toLocaleString('ko-KR')} · ${t.goldEnabled?`${gold(weeklyTaskEarned(t))} / ${gold(weeklyTaskGold(t))}`:'논골드'}${r.boundGold?' · 귀속':''}</small></div>
+    <div class="raid-copy"><strong>${esc(r.name)} <em>${esc(d.name)}</em> <span class="gold-kind ${kindClass}">${kind}</span></strong><small>Lv.${d.ilvl.toLocaleString('ko-KR')} · ${t.goldEnabled?`${gold(e.total)} / ${gold(p.total)}`:'논골드'}</small>${t.goldEnabled?`<small class="gold-split-line">유통 ${gold(e.tradable)} / ${gold(p.tradable)} · 귀속 ${gold(e.bound)} / ${gold(p.bound)}</small>`:''}</div>
     <div class="gates">${t.gates.map((g,i)=>`<button class="gate ${g.done?'on':''}" data-action="gate-toggle" data-char="${esc(c.key)}" data-task="${esc(t.id)}" data-gate="${i}">${i+1}관</button>`).join('')}</div>${off}
   </div>`;
 }
@@ -167,7 +171,7 @@ export function updateCandidateCount(){setText('selectedCount',`${document.query
 export function raidOptions(selected=''){return RAID_CATALOG.map(r=>`<option value="${r.id}" ${r.id===selected?'selected':''}>${esc(r.group)} · ${esc(r.name)}${r.legacy?' (레거시)':''}</option>`).join('');}
 export function difficultyOptions(raidId,selected=''){
   const r=raidById(raidId);
-  return (r?.difficulties||[]).map(d=>`<option value="${d.id}" ${d.id===selected?'selected':''}>${esc(d.name)} · Lv.${d.ilvl.toLocaleString('ko-KR')} · ${gold(d.gold)}</option>`).join('');
+  return (r?.difficulties||[]).map(d=>{const rate=boundGoldRateOf(raidId,d.id),kind=rate>=1?'귀속 100%':rate>0?`귀속 ${Math.round(rate*100)}%`:'유통 100%';return `<option value="${d.id}" ${d.id===selected?'selected':''}>${esc(d.name)} · Lv.${d.ilvl.toLocaleString('ko-KR')} · ${gold(d.gold)} · ${kind}</option>`;}).join('');
 }
 function dailyEditor(t){
   return `<div class="edit-row daily-edit" data-id="${esc(t.id)}" data-current="${t.current}" data-active="${t.active!==false?'1':'0'}" data-source="${esc(t.source||'manual')}"><input class="input task-name" value="${esc(t.name)}" placeholder="숙제 이름"><input class="input target" type="number" min="1" max="99" value="${t.target}"><label class="tiny-check"><input type="checkbox" class="rest-enabled" ${t.restEnabled?'checked':''}>휴게</label><input class="input rest-value" type="number" min="0" max="200" value="${t.rest}" ${t.restEnabled?'':'disabled'}><button class="remove" data-action="remove-editor-row">✕</button></div>`;
