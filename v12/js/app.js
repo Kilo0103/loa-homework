@@ -1,7 +1,7 @@
-import { state, save, ensureResets, getApiKey, setApiKey, resetState, character, makeDaily, makeCustomWeekly, makeRaidWeekly } from './state.js?v=18';
+import { state, save, ensureResets, getApiKey, setApiKey, resetState, character, makeDaily, makeCustomWeekly, makeRaidWeekly } from './state.js?v=19';
 import { fetchRoster } from './api.js';
-import { recommendedDaily, recommendedRaids, extraSuggestions } from './recommend.js?v=18';
-import * as UI from './ui.js?v=18';
+import { recommendedDaily, recommendedRaids, extraSuggestions } from './recommend.js?v=19';
+import * as UI from './ui.js?v=19';
 
 let filter='all',query='';
 
