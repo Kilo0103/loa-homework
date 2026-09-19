@@ -1,5 +1,5 @@
-import { RAID_CATALOG } from '../data/raids.js';
-import { makeDaily, makeRaidWeekly } from './state.js';
+import { RAID_CATALOG } from '../data/raids.js?v=18';
+import { makeDaily, makeRaidWeekly } from './state.js?v=18';
 
 export const EXTRA_GOALS=[
   {id:'gem',label:'보석'},
