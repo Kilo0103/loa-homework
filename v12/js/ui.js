@@ -1,4 +1,4 @@
-import { state, summary, weeklyTaskGold, weeklyTaskEarned, character } from './state.js';
+import { state, summary, weeklyTaskGold, weeklyTaskEarned, weeklyTaskGoldBreakdown, weeklyTaskEarnedBreakdown, character } from './state.js';
 import { RAID_CATALOG, raidById, difficultyOf } from '../data/raids.js';
 import { EXTRA_GOALS, extraSuggestions, extraPriority } from './recommend.js';
 
@@ -21,6 +21,7 @@ export function renderSummary(){
   document.getElementById('weeklyBar').style.width=`${wp}%`;
   setText('goldPotential',gold(s.goldPotential));
   setText('goldEarned',`획득 ${gold(s.goldEarned)} · 남음 ${gold(s.goldPotential-s.goldEarned)}`);
+  setText('goldSplit',`유통 ${gold(s.goldPotentialTradeable)} · 귀속 ${gold(s.goldPotentialBound)}`);
   setText('extraActive',`${s.extraDone} / ${s.extraTotal}`);
   setText('extraText',`Extra ${s.extraCount}명 · 활성 숙제 ${ep}%`);
   setText('rosterRoleCount',`The Six ${s.sixCount}/6`);
@@ -45,17 +46,26 @@ function weeklyHtml(c,t,extra=false){
   </div>`;
   const r=raidById(t.raidId),d=difficultyOf(t.raidId,t.difficultyId);
   if(!r||!d)return `<div class="weekly-item broken">알 수 없는 레이드${off}</div>`;
+  const total=weeklyTaskGoldBreakdown(t),earned=weeklyTaskEarnedBreakdown(t);
+  const split=total.bound>0
+    ? `<span class="gold-split"><b>유통 ${gold(total.tradeable)}</b><b class="bound">귀속 ${gold(total.bound)}</b></span>`
+    : `<span class="gold-split"><b>유통 ${gold(total.tradeable)}</b></span>`;
   return `<div class="weekly-item">
-    <div class="raid-copy"><strong>${esc(r.name)} <em>${esc(d.name)}</em></strong><small>Lv.${d.ilvl.toLocaleString('ko-KR')} · ${t.goldEnabled?`${gold(weeklyTaskEarned(t))} / ${gold(weeklyTaskGold(t))}`:'논골드'}${r.boundGold?' · 귀속':''}</small></div>
+    <div class="raid-copy"><strong>${esc(r.name)} <em>${esc(d.name)}</em></strong><small>Lv.${d.ilvl.toLocaleString('ko-KR')} · ${t.goldEnabled?`${gold(earned.total)} / ${gold(total.total)}`:'논골드'}</small>${t.goldEnabled?split:''}</div>
     <div class="gates">${t.gates.map((g,i)=>`<button class="gate ${g.done?'on':''}" data-action="gate-toggle" data-char="${esc(c.key)}" data-task="${esc(t.id)}" data-gate="${i}">${i+1}관</button>`).join('')}</div>${off}
   </div>`;
 }
 function characterGold(c){
-  if(!c.goldCharacter)return 0;
-  return c.weeklyTasks.reduce((s,t)=>s+weeklyTaskGold(t),0);
+  if(!c.goldCharacter)return {total:0,tradeable:0,bound:0};
+  return c.weeklyTasks.reduce((s,t)=>{
+    const g=weeklyTaskGoldBreakdown(t);
+    s.total+=g.total;s.tradeable+=g.tradeable;s.bound+=g.bound;
+    return s;
+  },{total:0,tradeable:0,bound:0});
 }
 function head(c){
   const img=c.profile?.characterImage;
+  const cg=characterGold(c);
   return `<header class="char-head">
     <div class="identity">
       <div class="avatar">${img?`<img src="${esc(img)}" alt="">`:`<span>${esc((c.characterClassName||'LA').slice(0,2))}</span>`}</div>
@@ -66,7 +76,7 @@ function head(c){
     </div>
     <div class="char-actions">
       <label class="gold-toggle six-toggle"><input type="checkbox" data-action="gold-character" data-char="${esc(c.key)}" ${c.goldCharacter?'checked':''}><span>The Six</span></label>
-      ${c.goldCharacter?`<strong class="char-gold">${gold(characterGold(c))}</strong><button class="btn small ghost" data-action="recommend" data-char="${esc(c.key)}">추천 재구성</button>`:''}
+      ${c.goldCharacter?`<div class="char-gold"><strong>${gold(cg.total)}</strong><small>유통 ${gold(cg.tradeable)}${cg.bound?` · 귀속 ${gold(cg.bound)}`:''}</small></div><button class="btn small ghost" data-action="recommend" data-char="${esc(c.key)}">추천 재구성</button>`:''}
       <button class="icon-btn" data-action="edit-character" data-char="${esc(c.key)}">⋯</button>
     </div>
   </header>`;
