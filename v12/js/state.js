@@ -1,4 +1,4 @@
-import { difficultyOf, distributeGateGold, boundRateOf } from '../data/raids.js';
+import { difficultyOf, distributeGateGold, boundRateOf } from '../data/raids.js?v=18';
 
 export const STORAGE_KEY='loa-homework-v12';
 const OLD_KEYS=['loa-homework-v9','loa-homework-v8'];
