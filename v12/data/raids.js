@@ -15,17 +15,25 @@ export const RAID_CATALOG = [
   {id:'act3',name:'3막 : 모르둠',group:'카제로스',difficulties:[{id:'single',name:'싱글',ilvl:1680,gates:3,gold:21000},{id:'normal',name:'노말',ilvl:1680,gates:3,gold:21000},{id:'hard',name:'하드',ilvl:1700,gates:3,gold:27000}]},
   {id:'act4',name:'4막 : 아르모체',group:'카제로스',difficulties:[{id:'single',name:'싱글',ilvl:1700,gates:2,gold:27000,gateGold:[10000,17000]},{id:'normal',name:'노말',ilvl:1700,gates:2,gold:27000,gateGold:[10000,17000]},{id:'hard',name:'하드',ilvl:1720,gates:2,gold:38000,gateGold:[13000,25000]}]},
   {id:'finale',name:'종막 : 카제로스',group:'카제로스',difficulties:[{id:'single',name:'싱글',ilvl:1710,gates:2,gold:32000,gateGold:[11000,21000]},{id:'normal',name:'노말',ilvl:1710,gates:2,gold:32000,gateGold:[11000,21000]},{id:'hard',name:'하드',ilvl:1730,gates:2,gold:48000,gateGold:[16000,32000]}]},
-  {id:'serka',name:'고통의 마녀, 세르카',group:'그림자',difficulties:[{id:'normal',name:'노말',ilvl:1710,gates:2,gold:32000,gateGold:[13000,19000]},{id:'hard',name:'하드',ilvl:1730,gates:2,gold:44000,gateGold:[17500,26500]},{id:'nightmare',name:'나이트메어',ilvl:1740,gates:2,gold:54000,gateGold:[21000,33000]}]},
+  {id:'serka',name:'고통의 마녀, 세르카',group:'그림자',difficulties:[{id:'matching',name:'매칭',ilvl:1710,gates:2,gold:32000,gateGold:[13000,19000],boundRate:.5},{id:'normal',name:'노말',ilvl:1710,gates:2,gold:32000,gateGold:[13000,19000]},{id:'hard',name:'하드',ilvl:1730,gates:2,gold:44000,gateGold:[17500,26500]},{id:'nightmare',name:'나이트메어',ilvl:1740,gates:2,gold:54000,gateGold:[21000,33000]}]},
   {id:'cathedral',name:'지평의 성당',group:'어비스',boundGold:true,difficulties:[{id:'stage1',name:'1단계',ilvl:1700,gates:2,gold:30000,gateGold:[13500,16500]},{id:'stage2',name:'2단계',ilvl:1720,gates:2,gold:40000,gateGold:[16000,24000]},{id:'stage3',name:'3단계',ilvl:1750,gates:2,gold:50000,gateGold:[20000,30000]}]},
-  {id:'belgardin',name:'죽음의 계승자, 벨가르딘',group:'그림자',difficulties:[{id:'normal',name:'노말',ilvl:1750,gates:2,gold:50000,gateGold:[20000,30000]},{id:'hard',name:'하드',ilvl:1770,gates:2,gold:62000,gateGold:[25000,37000]},{id:'nightmare',name:'나이트메어',ilvl:1780,gates:2,gold:75000,gateGold:[30000,45000]}]}
+  {id:'belgardin',name:'죽음의 계율자, 벨가르딘',group:'그림자',difficulties:[{id:'matching',name:'매칭',ilvl:1750,gates:2,gold:50000,gateGold:[20000,30000],boundRate:.5,availableFrom:'2026-09-23'},{id:'normal',name:'노말',ilvl:1750,gates:2,gold:50000,gateGold:[20000,30000]},{id:'hard',name:'하드',ilvl:1770,gates:2,gold:62000,gateGold:[25000,37000]},{id:'nightmare',name:'나이트메어',ilvl:1780,gates:2,gold:75000,gateGold:[30000,45000]}]}
 ];
 
 export function raidById(id){return RAID_CATALOG.find(r=>r.id===id)||null;}
 export function difficultyOf(raidId,difficultyId){const r=raidById(raidId);return r?.difficulties.find(d=>d.id===difficultyId)||null;}
+export function kstDateKey(){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+  return `${p.year}-${p.month}-${p.day}`;
+}
+export function isDifficultyAvailable(d,dateKey=kstDateKey()){return !d?.availableFrom||dateKey>=d.availableFrom;}
 const HALF_BOUND_RAIDS=new Set(['echidna','behemoth','act1','act2','act3','act4','finale','serka']);
 export function boundRateOf(raidId,difficultyId){
   const r=raidById(raidId),d=difficultyOf(raidId,difficultyId);
   if(!r||!d||Number(d.gold||0)<=0)return 0;
+  const customRate=Number(d.boundRate);
+  if(Number.isFinite(customRate))return Math.max(0,Math.min(1,customRate));
   if(raidId==='cathedral')return 1;
   if(HALF_BOUND_RAIDS.has(raidId)&&Number(d.ilvl||0)<=1710)return .5;
   return 0;
